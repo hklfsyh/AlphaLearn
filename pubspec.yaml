@@ -33,6 +33,7 @@ dependencies:
   sqflite: ^2.3.0
   path_provider: ^2.0.11
   json_annotation: ^4.8.1
+  get: ^4.7.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -78,17 +79,27 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
+  fonts:
+    - family: fredroka
+      fonts:
+        - asset: assets/fonts/fredroka_regular.ttf
+        - asset: assets/fonts/fredroka_medium.ttf
+          weight: 500
+        - asset: assets/fonts/fredroka_bold.ttf
+          weight: 700
+    - family: nunito
+      fonts:
+        - asset: assets/fonts/nunito_regular.ttf
+        - asset: assets/fonts/nunito_light.ttf
+          weight: 300
+        - asset: assets/fonts/nunito_italic.ttf
+          style: italic
+        - asset: assets/fonts/nunito_medium.ttf
+          weight: 500
+        - asset: assets/fonts/nunito_semibold.ttf
+          weight: 600
+        - asset: assets/fonts/nunito_bold.ttf
+          weight: 700
+  
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
