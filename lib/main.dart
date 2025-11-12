@@ -1,4 +1,4 @@
-import 'package:alphalearn/core/core.dart';
+import '../../core/core.dart';
 import 'package:alphalearn/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
-      initialRoute: AppConstants.splashRoute,
+      initialRoute: AppConstants.homeRoute,
       getPages: appPages,
     );
   }
