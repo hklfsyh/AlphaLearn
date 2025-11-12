@@ -43,8 +43,7 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     return BottomBar(
-      fit: StackFit.passthrough,
-
+      fit: StackFit.expand,
       borderRadius: BorderRadius.circular(500),
       duration: const Duration(seconds: 1),
       curve: Curves.decelerate,
@@ -67,16 +66,26 @@ class _HomePageState extends State<HomePage>
       scrollOpposite: false,
       onBottomBarHidden: () {},
       onBottomBarShown: () {},
-      // body is the TabBarView
-      body: (context, controller) => TabBarView(
-        controller: tabController,
-        dragStartBehavior: DragStartBehavior.down,
-        physics: const BouncingScrollPhysics(),
-        children: const [
-          AboutTab(),
-          MenuTab(),
-          ProgressTab(),
-        ],
+      body: (context, controller) => Scaffold(
+        appBar: AppBar(
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              "assets/images/logo_app.png",
+            ),
+          ),
+          elevation: 24.0,
+        ),
+        body: TabBarView(
+          controller: tabController,
+          dragStartBehavior: DragStartBehavior.down,
+          physics: const BouncingScrollPhysics(),
+          children: const [
+            AboutTab(),
+            MenuTab(),
+            ProgressTab(),
+          ],
+        ),
       ),
       child: TabBar(
         splashFactory: NoSplash.splashFactory,
@@ -91,7 +100,7 @@ class _HomePageState extends State<HomePage>
             label: "About",
           ),
           CircleTab(
-            color: AppColors.greenDark,
+            color: AppColors.greenLight,
             icon: 'icon_home',
             label: "Home",
           ),

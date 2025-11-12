@@ -21,7 +21,8 @@ class AppColors {
 
   // Additional Colors
   static const Color outline = Color(0xFFE0E0E0);
-  static const Color grey = Color(0xFF9E9E9E);
+  static const Color grey = Color(0xFF9FC3CC);
+  static const Color cream = Color(0xFFFFEE90);
   static const Color lightGrey = Color(0xFFF5F5F5);
   static const Color darkGrey = Color(0xFF424242);
   static const Color greenDark = Color(0xFF2A5731);

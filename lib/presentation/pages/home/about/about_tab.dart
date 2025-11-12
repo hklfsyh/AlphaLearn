@@ -6,8 +6,7 @@ class AboutTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Container(
+    return Container(
       width: double.infinity,
       height: double.infinity,
       color: AppColors.background,
@@ -70,6 +69,6 @@ class AboutTab extends StatelessWidget {
           ],
         ),
       ),
-    ));
+    );
   }
 }
