@@ -1,4 +1,5 @@
 import 'package:alphalearn/core/core.dart';
+import 'package:alphalearn/presentation/widget/card_widget.dart';
 import 'package:flutter/material.dart';
 
 class MenuTab extends StatelessWidget {
@@ -10,13 +11,30 @@ class MenuTab extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       color: AppColors.background,
-      child: SafeArea(
-          child: Center(
-        child: Text(
-          'Home',
-          style: AppTextStyles.textTheme.displayLarge,
-        ),
-      )),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 48.0,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 60,
+          ),
+          CardWidget(
+            width: 300,
+            height: 300,
+            title: "Belajar Alfabet",
+            imagePath: 'assets/images/alfabeth.png',
+            backgroundColor: AppColors.cream,
+          ),
+          CardWidget(
+            width: 300,
+            height: 300,
+            title: "Tebak Huruf",
+            imagePath: 'assets/images/tebakhuruf.png',
+            backgroundColor: AppColors.grey,
+          ),
+        ],
+      ),
     );
   }
 }
