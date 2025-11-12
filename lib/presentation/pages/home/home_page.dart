@@ -43,18 +43,8 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     return BottomBar(
-      fit: StackFit.expand,
-      icon: (width, height) => Center(
-        child: IconButton(
-          padding: EdgeInsets.zero,
-          onPressed: null,
-          icon: Icon(
-            Icons.arrow_upward_rounded,
-            color: unselectedColor,
-            size: width,
-          ),
-        ),
-      ),
+      fit: StackFit.passthrough,
+
       borderRadius: BorderRadius.circular(500),
       duration: const Duration(seconds: 1),
       curve: Curves.decelerate,
@@ -65,8 +55,7 @@ class _HomePageState extends State<HomePage>
       end: 0,
       offset: 10,
       barAlignment: Alignment.bottomCenter,
-      iconHeight: 35,
-      iconWidth: 35,
+
       reverse: false,
       barDecoration: BoxDecoration(
         borderRadius: BorderRadius.circular(500),
