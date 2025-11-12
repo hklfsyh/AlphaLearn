@@ -10,7 +10,13 @@ class MenuTab extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       color: AppColors.background,
-      child: Text('Home'),
+      child: SafeArea(
+          child: Center(
+        child: Text(
+          'Home',
+          style: AppTextStyles.textTheme.displayLarge,
+        ),
+      )),
     );
   }
 }

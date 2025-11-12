@@ -3,8 +3,8 @@ import 'app_colors.dart';
 
 class AppTextStyles {
   // Font Family
-  static const String primaryFontFamily = 'Fredroka';
-  static const String secondaryFontFamily = 'Ninuto';
+  static const String primaryFontFamily = 'fredoka';
+  static const String secondaryFontFamily = 'nunito';
 
   // Light Theme Text Styles
   static const TextTheme textTheme = TextTheme(
