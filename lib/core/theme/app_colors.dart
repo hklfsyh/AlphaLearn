@@ -13,7 +13,7 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF);
   static const Color onSurface = Color(0xFF000000);
 
-  static const Color background = Color(0xFFF5F5F5);
+  static const Color background = Color(0xFFFDFBF6);
   static const Color onBackground = Color(0xFF000000);
 
   static const Color error = Color(0xFFB00020);
@@ -21,9 +21,14 @@ class AppColors {
 
   // Additional Colors
   static const Color outline = Color(0xFFE0E0E0);
-  static const Color grey = Color(0xFF9E9E9E);
+  static const Color grey = Color(0xFF9FC3CC);
+  static const Color cream = Color(0xFFFFEE90);
   static const Color lightGrey = Color(0xFFF5F5F5);
   static const Color darkGrey = Color(0xFF424242);
+  static const Color greenDark = Color(0xFF2A5731);
+  static const Color greenLight = Color(0xFF50B83C);
+  static const Color brownLight = Color(0xFFD5AC8B);
+  static const Color redLight = Color(0xFFFF6961);
 
   // Success Colors
   static const Color success = Color(0xFF4CAF50);

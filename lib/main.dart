@@ -1,4 +1,4 @@
-import 'package:alphalearn/core/core.dart';
+import '../../core/core.dart';
 import 'package:alphalearn/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
