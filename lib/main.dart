@@ -1,9 +1,16 @@
 import '../../core/core.dart';
 import 'package:alphalearn/routes/app_pages.dart';
+import 'package:alphalearn/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database - akan terbentuk sekali saat pertama kali install
+  await DatabaseHelper.initialize();
+
   runApp(const MyApp());
 }
 
