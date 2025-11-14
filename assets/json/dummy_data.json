@@ -1,0 +1,187 @@
+{
+  "category_data": [
+    {
+      "category_id": 1,
+      "name": "Buah",
+      "is_categorized_level": true,
+      "sequence_order": 1,
+      "description": "Kategori untuk belajar nama-nama buah"
+    },
+    {
+      "category_id": 2,
+      "name": "Binatang",
+      "is_categorized_level": true,
+      "sequence_order": 2,
+      "description": "Kategori untuk belajar nama-nama binatang"
+    },
+    {
+      "category_id": 3,
+      "name": "Tubuh",
+      "is_categorized_level": true,
+      "sequence_order": 3,
+      "description": "Kategori untuk belajar nama-nama bagian tubuh"
+    },
+    {
+      "category_id": 4,
+      "name": "Benda",
+      "is_categorized_level": true,
+      "sequence_order": 4,
+      "description": "Kategori untuk belajar nama-nama benda"
+    },
+    {
+      "category_id": 5,
+      "name": "Keluarga",
+      "is_categorized_level": true,
+      "sequence_order": 5,
+      "description": "Kategori untuk belajar nama-nama anggota keluarga"
+    },
+    {
+      "category_id": 6,
+      "name": "A-E Alfabet",
+      "is_categorized_level": false,
+      "sequence_order": 1,
+      "description": "Belajar alfabet A sampai E secara berurutan"
+    }
+  ],
+  "gamemode_data": [
+    {
+      "mode_id": 1,
+      "mode_name": "Tebak Huruf",
+      "description": "Game menebak huruf berdasarkan gambar"
+    },
+    {
+      "mode_id": 2,
+      "mode_name": "Puzzle/Hubungkan Titik",
+      "description": "Game menyusun alfabet A-Z secara berurutan"
+    }
+  ],
+  "contentword_data": [
+    {
+      "word_id": 101,
+      "category_id": 1,
+      "word": "APEL",
+      "image_asset": null,
+      "keterangan": "Soal Buah 1/2"
+    },
+    {
+      "word_id": 102,
+      "category_id": 1,
+      "word": "BELIMBING",
+      "image_asset": null,
+      "keterangan": "Soal Buah 2/2"
+    },
+    {
+      "word_id": 201,
+      "category_id": 2,
+      "word": "AYAM",
+      "image_asset": null,
+      "keterangan": "Soal Binatang 1/2"
+    },
+    {
+      "word_id": 202,
+      "category_id": 2,
+      "word": "BEBEK",
+      "image_asset": null,
+      "keterangan": "Soal Binatang 2/2"
+    },
+    {
+      "word_id": 301,
+      "category_id": 3,
+      "word": "MATA",
+      "image_asset": null,
+      "keterangan": "Soal Tubuh 1/2"
+    },
+    {
+      "word_id": 302,
+      "category_id": 3,
+      "word": "HIDUNG",
+      "image_asset": null,
+      "keterangan": "Soal Tubuh 2/2"
+    },
+    {
+      "word_id": 601,
+      "category_id": 6,
+      "word": "A",
+      "image_asset": null,
+      "keterangan": "Huruf Alfabet 1/5"
+    },
+    {
+      "word_id": 602,
+      "category_id": 6,
+      "word": "B",
+      "image_asset": null,
+      "keterangan": "Huruf Alfabet 2/5"
+    },
+    {
+      "word_id": 603,
+      "category_id": 6,
+      "word": "C",
+      "image_asset": null,
+      "keterangan": "Huruf Alfabet 3/5"
+    },
+    {
+      "word_id": 604,
+      "category_id": 6,
+      "word": "D",
+      "image_asset": null,
+      "keterangan": "Huruf Alfabet 4/5"
+    },
+    {
+      "word_id": 605,
+      "category_id": 6,
+      "word": "E",
+      "image_asset": null,
+      "keterangan": "Huruf Alfabet 5/5"
+    }
+  ],
+  "userprogress_data": [
+    {
+      "progress_id": 1,
+      "category_id": 1,
+      "current_score": 0,
+      "max_questions": 2,
+      "is_completed": false,
+      "keterangan": "Terkunci (Prasyarat Alfabet Belum Selesai)."
+    },
+    {
+      "progress_id": 2,
+      "category_id": 2,
+      "current_score": 0,
+      "max_questions": 2,
+      "is_completed": false,
+      "keterangan": "Terkunci (Buah belum selesai)."
+    },
+    {
+      "progress_id": 3,
+      "category_id": 3,
+      "current_score": 0,
+      "max_questions": 2,
+      "is_completed": false,
+      "keterangan": "Terkunci (Binatang belum selesai)."
+    },
+    {
+      "progress_id": 4,
+      "category_id": 4,
+      "current_score": 0,
+      "max_questions": 2,
+      "is_completed": false,
+      "keterangan": "Terkunci (Tubuh belum selesai)."
+    },
+    {
+      "progress_id": 5,
+      "category_id": 5,
+      "current_score": 0,
+      "max_questions": 2,
+      "is_completed": false,
+      "keterangan": "Terkunci (Benda belum selesai)."
+    },
+    {
+      "progress_id": 6,
+      "category_id": 6,
+      "current_score": 3,
+      "max_questions": 5,
+      "is_completed": false,
+      "keterangan": "Belum Selesai (3/5). Ini yang menyebabkan semua di atas terkunci."
+    }
+  ]
+}
