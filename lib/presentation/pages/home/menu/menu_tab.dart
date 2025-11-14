@@ -2,6 +2,8 @@ import 'package:alphalearn/core/core.dart';
 import 'package:alphalearn/presentation/widget/card_widget.dart';
 import 'package:flutter/material.dart';
 
+import '../../alfabeth/alfabet_page.dart';
+
 class MenuTab extends StatelessWidget {
   const MenuTab({super.key});
 
@@ -20,6 +22,10 @@ class MenuTab extends StatelessWidget {
             height: 60,
           ),
           CardWidget(
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AlphabetGamePage())),
             width: 300,
             height: 300,
             title: "Belajar Alfabet",

@@ -1,6 +1,4 @@
 import '../../../../../core/core.dart';
-import '../presentation/pages/alfabeth/alfabeth_menu_page.dart';
-import '../presentation/pages/alfabeth/alfabeth_page.dart';
 import '../presentation/pages/home/home_page.dart';
 import '../presentation/pages/puzzle/puzzle_menu_page.dart';
 import '../presentation/pages/puzzle/puzzle_page.dart';
@@ -29,12 +27,8 @@ final appPages = [
     name: AppConstants.puzzleRoute,
     page: () => const PuzzlePage(),
   ),
-  GetPage(
-    name: AppConstants.alfabethMenuRoute,
-    page: () => const AlfabethMenuPage(),
-  ),
-  GetPage(
-    name: AppConstants.alfabethRoute,
-    page: () => const AlfabethPage(),
-  ),
+  // GetPage(
+  //   name: AppConstants.alfabethMenuRoute,
+  //   page: () => const AlfabethMenuPage(),
+  // ),
 ];

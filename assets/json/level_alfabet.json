@@ -1,0 +1,62 @@
+{
+    "levels": [
+        {
+            "id": "A",
+            "letter": "A",
+            "outline": {
+                "width": 360,
+                "height": 560
+            },
+            "blocks": [
+                {
+                    "id": "left_leg",
+                    "size": {
+                        "w": 0.22,
+                        "h": 0.36
+                    },
+                    "targetCenter": {
+                        "x": 0.333,
+                        "y": 0.625
+                    },
+                    "targetAngle": -0.524,
+                    "initialPosition": {
+                        "x": 0.11,
+                        "y": 0.8
+                    }
+                },
+                {
+                    "id": "right_leg",
+                    "size": {
+                        "w": 0.22,
+                        "h": 0.36
+                    },
+                    "targetCenter": {
+                        "x": 0.667,
+                        "y": 0.625
+                    },
+                    "targetAngle": 0.524,
+                    "initialPosition": {
+                        "x": 0.5,
+                        "y": 0.8
+                    }
+                },
+                {
+                    "id": "crossbar",
+                    "size": {
+                        "w": 0.5,
+                        "h": 0.045
+                    },
+                    "targetCenter": {
+                        "x": 0.556,
+                        "y": 0.75
+                    },
+                    "targetAngle": 0.0,
+                    "initialPosition": {
+                        "x": 0.82,
+                        "y": 0.85
+                    }
+                }
+            ]
+        }
+    ]
+}
