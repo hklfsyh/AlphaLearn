@@ -42,7 +42,6 @@ class DatabaseHelper {
       CREATE TABLE Category (
         category_id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
-        is_categorized_level BOOLEAN NOT NULL,
         sequence_order INTEGER NOT NULL
       )
     ''');
@@ -106,7 +105,6 @@ class DatabaseHelper {
         await db.insert('Category', {
           'category_id': category['category_id'],
           'name': category['name'],
-          'is_categorized_level': category['is_categorized_level'] ? 1 : 0,
           'sequence_order': category['sequence_order'],
         });
       }
@@ -160,7 +158,6 @@ class DatabaseHelper {
     await db.insert('Category', {
       'category_id': 1,
       'name': 'Buah',
-      'is_categorized_level': 1,
       'sequence_order': 1,
     });
 

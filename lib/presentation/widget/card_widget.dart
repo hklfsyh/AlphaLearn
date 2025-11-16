@@ -1,4 +1,3 @@
-import 'package:alphalearn/core/core.dart';
 import 'package:flutter/material.dart';
 
 class CardWidget extends StatelessWidget {
@@ -36,15 +35,6 @@ class CardWidget extends StatelessWidget {
           onTap: onTap,
           child: Stack(
             children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                  height: 300,
-                ),
-              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -56,9 +46,15 @@ class CardWidget extends StatelessWidget {
                         style: TextStyle(
                             fontFamily: "fredoka",
                             fontWeight: FontWeight.w700,
-                            fontSize: 34.0,
+                            fontSize: 24.0,
                             color: Colors.white),
                       ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   if (child != null) child!,

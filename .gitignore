@@ -33,6 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 /android/local.properties
+/android/gradle.properties
 
 # Symbolication related
 app.*.symbols

@@ -48,13 +48,12 @@ class _HomePageState extends State<HomePage>
       duration: const Duration(seconds: 1),
       curve: Curves.decelerate,
       showIcon: true,
-      width: screenWidth * 0.8,
+      width: screenWidth * 0.7,
       barColor: AppColors.greenDark,
       start: 2,
       end: 0,
-      offset: 10,
+      offset: 5,
       barAlignment: Alignment.bottomCenter,
-
       reverse: false,
       barDecoration: BoxDecoration(
         borderRadius: BorderRadius.circular(500),
@@ -67,23 +66,39 @@ class _HomePageState extends State<HomePage>
       onBottomBarHidden: () {},
       onBottomBarShown: () {},
       body: (context, controller) => Scaffold(
+        backgroundColor: AppColors.white,
         appBar: AppBar(
+          elevation: 24.0,
+          shadowColor: Colors.black.withOpacity(0.5),
+          backgroundColor: AppColors.white,
+          surfaceTintColor: Colors.transparent,
           leading: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: Image.asset(
               "assets/images/logo_app.png",
+              fit: BoxFit.contain,
             ),
           ),
-          elevation: 24.0,
         ),
-        body: TabBarView(
-          controller: tabController,
-          dragStartBehavior: DragStartBehavior.down,
-          physics: const BouncingScrollPhysics(),
-          children: const [
-            AboutTab(),
-            MenuTab(),
-            ProgressTab(),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/background_main_page.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            TabBarView(
+              controller: tabController,
+              dragStartBehavior: DragStartBehavior.down,
+              physics: const BouncingScrollPhysics(),
+              children: const [
+                AboutTab(),
+                MenuTab(),
+                ProgressTab(),
+              ],
+            ),
           ],
         ),
       ),
@@ -92,7 +107,7 @@ class _HomePageState extends State<HomePage>
         controller: tabController,
         indicatorColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: const EdgeInsets.symmetric(vertical: 6.0),
+        indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
         tabs: const [
           CircleTab(
             color: AppColors.brownLight,
