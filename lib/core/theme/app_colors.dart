@@ -20,6 +20,8 @@ class AppColors {
   static const Color onError = Color(0xFFFFFFFF);
 
   // Additional Colors
+  static const Color black = Color(0xFF000000);
+  static const Color white = Color(0xFFFFFFFF);
   static const Color outline = Color(0xFFE0E0E0);
   static const Color grey = Color(0xFF9FC3CC);
   static const Color cream = Color(0xFFFFEE90);

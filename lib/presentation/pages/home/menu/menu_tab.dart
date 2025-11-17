@@ -9,36 +9,44 @@ class MenuTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = screenWidth * 0.60;
+
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: 48.0,
-        mainAxisAlignment: MainAxisAlignment.start,
+      color: Colors.transparent,
+      child: ListView(
+        padding: AppSizes.paddingAllLg.copyWith(
+          top: AppSizes.paddingXl * 1.5,
+          bottom: AppSizes.bottomNavHeight + AppSizes.paddingLg,
+        ),
         children: [
-          SizedBox(
-            height: 60,
+          Center(
+            child: CardWidget(
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AlphabetGamePage())),
+              width: cardWidth,
+              height: cardWidth,
+              title: "Belajar Alfabet",
+              imagePath: 'assets/images/alfabeth.png',
+              backgroundColor: AppColors.cream,
+            ),
           ),
-          CardWidget(
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const AlphabetGamePage())),
-            width: 300,
-            height: 300,
-            title: "Belajar Alfabet",
-            imagePath: 'assets/images/alfabeth.png',
-            backgroundColor: AppColors.cream,
+          SizedBox(height: AppSizes.paddingXl * 1.5),
+          Center(
+            child: CardWidget(
+              onTap: () {},
+              width: cardWidth,
+              height: cardWidth,
+              title: "Tebak Huruf",
+              imagePath: 'assets/images/tebakhuruf.png',
+              backgroundColor: AppColors.grey,
+            ),
           ),
-          CardWidget(
-            width: 300,
-            height: 300,
-            title: "Tebak Huruf",
-            imagePath: 'assets/images/tebakhuruf.png',
-            backgroundColor: AppColors.grey,
-          ),
+          SizedBox(height: AppSizes.paddingLg),
         ],
       ),
     );
