@@ -1,9 +1,13 @@
+import 'package:alphalearn/presentation/pages/puzzle/puzzle_binding.dart';
+
 import '../../../../../core/core.dart';
 import '../presentation/pages/home/home_page.dart';
 import '../presentation/pages/puzzle/puzzle_menu_page.dart';
-import '../presentation/pages/puzzle/puzzle_page.dart';
+import '../presentation/pages/puzzle/puzzle_level_page.dart';
+import '../presentation/pages/puzzle/puzzle_game_page.dart';
 import '../presentation/pages/splash/first_page.dart';
 import '../presentation/pages/splash/splash_page.dart';
+import '../presentation/pages/alfabeth/alfabet_page.dart';
 import 'package:get/get.dart';
 
 final appPages = [
@@ -22,13 +26,20 @@ final appPages = [
   GetPage(
     name: AppConstants.puzzleMenuRoute,
     page: () => const PuzzleMenuPage(),
+    binding: PuzzleBinding(),
+  ),
+  GetPage(
+    name: AppConstants.puzzleLevelRoute,
+    page: () => const PuzzleLevelPage(),
+    binding: PuzzleBinding(),
   ),
   GetPage(
     name: AppConstants.puzzleRoute,
-    page: () => const PuzzlePage(),
+    page: () => const PuzzleGamePage(),
+    binding: PuzzleBinding(),
   ),
-  // GetPage(
-  //   name: AppConstants.alfabethMenuRoute,
-  //   page: () => const AlfabethMenuPage(),
-  // ),
+  GetPage(
+    name: AppConstants.alfabethRoute,
+    page: () => const AlphabetGamePage(),
+  ),
 ];

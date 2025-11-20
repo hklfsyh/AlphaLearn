@@ -20,6 +20,12 @@ class DatabaseHelper {
     print('Database AlphaLearn initialized successfully');
   }
 
+  Future<void> deleteDatabase() async {
+    String path = join(await getDatabasesPath(), 'alphalearn.db');
+    await databaseFactory.deleteDatabase(path);
+    print('Database AlphaLearn deleted successfully');
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
