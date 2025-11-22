@@ -1,8 +1,7 @@
 import 'package:alphalearn/core/core.dart';
 import 'package:alphalearn/presentation/widget/card_widget.dart';
 import 'package:flutter/material.dart';
-
-import '../../alfabeth/alfabet_page.dart';
+import 'package:get/get.dart';
 
 class MenuTab extends StatelessWidget {
   const MenuTab({super.key});
@@ -24,10 +23,7 @@ class MenuTab extends StatelessWidget {
         children: [
           Center(
             child: CardWidget(
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const AlphabetGamePage())),
+              onTap: () => Get.toNamed(AppConstants.alfabethRoute),
               width: cardWidth,
               height: cardWidth,
               title: "Belajar Alfabet",
@@ -38,7 +34,7 @@ class MenuTab extends StatelessWidget {
           SizedBox(height: AppSizes.paddingXl * 1.5),
           Center(
             child: CardWidget(
-              onTap: () {},
+              onTap: () => Get.toNamed(AppConstants.puzzleMenuRoute),
               width: cardWidth,
               height: cardWidth,
               title: "Tebak Huruf",

@@ -73,14 +73,14 @@ class AppConstants {
 
   static const String noName = 'No name provided';
 
-  static const String polindromeSuccess = 'The text is a palindrome';
-  static const String polindromeError = 'The text is not a palindrome';
-  static const String polindromeEmpty = 'Please enter a text to check';
+  // static const String polindromeSuccess = 'The text is a palindrome';
+  // static const String polindromeError = 'The text is not a palindrome';
+  // static const String polindromeEmpty = 'Please enter a text to check';
 
   static const String nameEmpty = 'Please enter your name';
 
   static const String hintTextName = 'Enter your name';
-  static const String hintTextPalindrome = 'Enter text to check';
+  // static const String hintTextPalindrome = 'Enter text to check';
 
   // Routes
   static const String splashRoute = '/splash';
@@ -88,7 +88,8 @@ class AppConstants {
   static const String homeRoute = '/home';
   static const String aboutRoute = '/about';
   static const String progressRoute = '/progress';
-  static const String puzzleMenuRoute = '/puzzle_menu';
+  static const String puzzleMenuRoute = '/puzzle-menu';
+  static const String puzzleLevelRoute = '/puzzle-level';
   static const String puzzleRoute = '/puzzle';
   static const String alfabethMenuRoute = '/alfabeth_menu';
   static const String alfabethRoute = '/alfabeth';
