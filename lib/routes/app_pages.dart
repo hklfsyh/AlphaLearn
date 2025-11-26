@@ -8,6 +8,8 @@ import '../presentation/pages/puzzle/puzzle_game_page.dart';
 import '../presentation/pages/splash/first_page.dart';
 import '../presentation/pages/splash/splash_page.dart';
 import '../presentation/pages/alfabeth/alfabet_page.dart';
+import '../presentation/pages/alfabeth/alfabet_menu_page.dart';
+import '../presentation/pages/alfabeth/alfabet_binding.dart';
 import 'package:get/get.dart';
 
 final appPages = [
@@ -38,8 +40,19 @@ final appPages = [
     page: () => const PuzzleGamePage(),
     binding: PuzzleBinding(),
   ),
+
+  GetPage(
+    name: AppConstants.alfabethMenuRoute,
+    page: () => const AlphabetMenuPage(),
+    binding: AlfabetBinding(),
+  ),
+
   GetPage(
     name: AppConstants.alfabethRoute,
-    page: () => const AlphabetGamePage(),
+    page: () {
+      final arg = Get.arguments;
+      final initialLevel = arg is int ? arg : 601; // Default to 601 if null
+      return AlphabetGamePage(wordId: initialLevel);
+    },
   ),
 ];
