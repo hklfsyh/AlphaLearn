@@ -23,7 +23,7 @@ class MenuTab extends StatelessWidget {
         children: [
           Center(
             child: CardWidget(
-              onTap: () => Get.toNamed(AppConstants.alfabethRoute),
+              onTap: () => Get.toNamed(AppConstants.alfabethMenuRoute),
               width: cardWidth,
               height: cardWidth,
               title: "Belajar Alfabet",

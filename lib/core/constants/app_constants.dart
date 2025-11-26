@@ -92,6 +92,7 @@ class AppConstants {
   static const String puzzleLevelRoute = '/puzzle-level';
   static const String puzzleRoute = '/puzzle';
   static const String alfabethMenuRoute = '/alfabeth_menu';
+  static const String alfabethLevelRoute = '/alfabeth_level';
   static const String alfabethRoute = '/alfabeth';
 
   // // Default Values
