@@ -28,10 +28,17 @@ class PuzzleController extends GetxController {
 
   final int modeId = 1; // Tebak Huruf
 
+  // ==========================================
+  // BYPASS MODE - Set true untuk testing
+  // Set false untuk production dengan lock system
+  // ==========================================
+  final bool bypassLock = true; // <-- UBAH KE FALSE UNTUK PRODUCTION
+
   @override
   void onInit() {
     super.onInit();
-    developer.log('🎮 PuzzleController initialized', name: 'PuzzleController');
+    developer.log('🎮 PuzzleController initialized (bypassLock: $bypassLock)',
+        name: 'PuzzleController');
     loadCategories();
   }
 
@@ -46,21 +53,15 @@ class PuzzleController extends GetxController {
       developer.log('📂 Loading categories...', name: 'PuzzleController');
       isLoading.value = true;
 
+      await Future.delayed(const Duration(milliseconds: 800));
+
       final allCategories = await _dbHelper.getAllCategories();
       developer.log('📂 Total categories from DB: ${allCategories.length}',
           name: 'PuzzleController');
 
-      // UBAH: Hanya filter berdasarkan category_id, bukan is_categorized_level
+      // Filter: hanya category 1-5, exclude Alfabet (6)
       categories.value = allCategories.where((cat) {
         final categoryId = cat['category_id'] as int;
-
-        developer.log(
-            '📂 Category ${cat['category_id']} (${cat['name']}): '
-            'checking categoryId...',
-            name: 'PuzzleController');
-
-        // Include category 1-5 (Buah, Binatang, Tubuh, Benda, Keluarga)
-        // Exclude category 6 (Alfabet)
         final shouldInclude = categoryId >= 1 && categoryId <= 5;
 
         developer.log(
@@ -73,14 +74,14 @@ class PuzzleController extends GetxController {
       developer.log('📂 Filtered categories: ${categories.length}',
           name: 'PuzzleController');
 
+      // Sort by category_id (simple sort)
       categories.sort((a, b) {
-        final orderA = a['sequence_order'] as int? ?? 0;
-        final orderB = b['sequence_order'] as int? ?? 0;
-        return orderA.compareTo(orderB);
+        final idA = a['category_id'] as int? ?? 0;
+        final idB = b['category_id'] as int? ?? 0;
+        return idA.compareTo(idB);
       });
 
-      developer.log('📂 Categories loaded and sorted:',
-          name: 'PuzzleController');
+      developer.log('📂 Categories loaded:', name: 'PuzzleController');
       for (var cat in categories) {
         developer.log('  - ${cat['category_id']}: ${cat['name']}',
             name: 'PuzzleController');
@@ -96,9 +97,6 @@ class PuzzleController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
-      developer.log(
-          '📂 isLoading set to false, categories.length=${categories.length}',
-          name: 'PuzzleController');
     }
   }
 
@@ -108,6 +106,8 @@ class PuzzleController extends GetxController {
           name: 'PuzzleController');
       isLoading.value = true;
       currentCategoryId.value = categoryId;
+
+      await Future.delayed(const Duration(milliseconds: 600));
 
       final contentWords =
           await _dbHelper.getContentWordsByCategory(categoryId);
@@ -142,7 +142,6 @@ class PuzzleController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
-      developer.log('📝 isLoading set to false', name: 'PuzzleController');
     }
   }
 
@@ -151,6 +150,9 @@ class PuzzleController extends GetxController {
       developer.log('🎯 Starting level: wordId=$wordId, word=$word',
           name: 'PuzzleController');
       isLoading.value = true;
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
       currentWordId.value = wordId;
       correctAnswer.value = word.toUpperCase();
 
@@ -159,8 +161,7 @@ class PuzzleController extends GetxController {
       isAnswered.value = false;
       selectedAnswer.value = '';
 
-      developer.log('🎯 Level state reset: score=0, isAnswered=false',
-          name: 'PuzzleController');
+      developer.log('🎯 Level state reset', name: 'PuzzleController');
 
       generateQuestion();
     } catch (e, stackTrace) {
@@ -174,7 +175,6 @@ class PuzzleController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
-      developer.log('🎯 isLoading set to false', name: 'PuzzleController');
     }
   }
 
@@ -183,8 +183,7 @@ class PuzzleController extends GetxController {
 
     final word = correctAnswer.value;
     if (word.isEmpty) {
-      developer.log('⚠️ Word is empty, cannot generate question',
-          name: 'PuzzleController');
+      developer.log('⚠️ Word is empty!', name: 'PuzzleController');
       return;
     }
 
@@ -193,21 +192,22 @@ class PuzzleController extends GetxController {
     final correctLetter = word[hiddenLetterIndex.value];
 
     developer.log(
-        '🎲 Word: $word, Hidden index: ${hiddenLetterIndex.value}, Correct letter: $correctLetter',
+        '🎲 Word: $word, Hidden index: ${hiddenLetterIndex.value}, '
+        'Correct letter: $correctLetter',
         name: 'PuzzleController');
 
-    final List<String> wrongLetter = [];
-    const String alfabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    final List<String> wrongLetters = [];
+    const String alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    while (wrongLetter.length < 3) {
-      final randomLetter = alfabet[random.nextInt(alfabet.length)];
+    while (wrongLetters.length < 3) {
+      final randomLetter = alphabet[random.nextInt(alphabet.length)];
       if (randomLetter != correctLetter &&
-          !wrongLetter.contains(randomLetter)) {
-        wrongLetter.add(randomLetter);
+          !wrongLetters.contains(randomLetter)) {
+        wrongLetters.add(randomLetter);
       }
     }
 
-    final List<String> options = [correctLetter, ...wrongLetter];
+    final List<String> options = [correctLetter, ...wrongLetters];
     options.shuffle();
     answerOptions.value = options;
 
@@ -216,7 +216,7 @@ class PuzzleController extends GetxController {
 
   void checkAnswer(String answer) {
     if (isAnswered.value) {
-      developer.log('⚠️ Already answered, ignoring', name: 'PuzzleController');
+      developer.log('⚠️ Already answered', name: 'PuzzleController');
       return;
     }
 
@@ -226,13 +226,12 @@ class PuzzleController extends GetxController {
     isAnswered.value = true;
     final correctLetter = correctAnswer.value[hiddenLetterIndex.value];
 
-    developer.log(
-        '✅ Selected: $answer, Correct: $correctLetter, Match: ${answer == correctLetter}',
+    developer.log('✅ Selected: $answer, Correct: $correctLetter',
         name: 'PuzzleController');
 
     if (answer == correctLetter) {
       score.value++;
-      developer.log('🎉 Correct answer! Score: ${score.value}',
+      developer.log('🎉 Correct! Score: ${score.value}',
           name: 'PuzzleController');
 
       Get.snackbar(
@@ -245,11 +244,10 @@ class PuzzleController extends GetxController {
       );
 
       Future.delayed(const Duration(seconds: 2), () {
-        developer.log('⏰ Delayed finishLevel called', name: 'PuzzleController');
         finishLevel();
       });
     } else {
-      developer.log('❌ Wrong answer!', name: 'PuzzleController');
+      developer.log('❌ Wrong!', name: 'PuzzleController');
 
       Get.snackbar(
         'Salah 😢',
@@ -260,9 +258,7 @@ class PuzzleController extends GetxController {
         duration: const Duration(seconds: 2),
       );
 
-      // Give one more try
       Future.delayed(const Duration(seconds: 2), () {
-        developer.log('⏰ Resetting for retry', name: 'PuzzleController');
         isAnswered.value = false;
         selectedAnswer.value = '';
       });
@@ -274,44 +270,40 @@ class PuzzleController extends GetxController {
       developer.log('🏁 Finishing level...', name: 'PuzzleController');
 
       final isCorrect = score.value > 0;
-      developer.log('🏁 Is correct: $isCorrect, Score: ${score.value}',
-          name: 'PuzzleController');
 
-      developer.log('💾 Updating activity completion...',
-          name: 'PuzzleController');
-      await _dbHelper.updateActivityCompletion(
-        wordId: currentWordId.value,
-        modeId: modeId,
-        isCompleted: isCorrect,
-      );
-      developer.log('💾 Activity completion updated', name: 'PuzzleController');
-
-      developer.log('💾 Getting user progress...', name: 'PuzzleController');
-      final progress =
-          await _dbHelper.getUserProgressByCategory(currentCategoryId.value);
-      developer.log('💾 Current progress: $progress', name: 'PuzzleController');
-
-      if (progress != null) {
-        final currentScore =
-            (progress['current_score'] as int? ?? 0) + (isCorrect ? 1 : 0);
-        final maxQuestions = progress['max_questions'] as int? ?? 0;
-
-        developer.log('💾 Updating progress: $currentScore/$maxQuestions',
-            name: 'PuzzleController');
-
-        await _dbHelper.updateUserProgress(
-          categoryId: currentCategoryId.value,
-          currentScore: currentScore,
-          isCompleted: currentScore >= maxQuestions,
+      // Skip database update saat bypass mode (optional)
+      if (!bypassLock) {
+        await _dbHelper.updateActivityCompletion(
+          wordId: currentWordId.value,
+          modeId: modeId,
+          isCompleted: isCorrect,
         );
-        developer.log('💾 User progress updated', name: 'PuzzleController');
-      }
 
-      developer.log('📢 Showing completion dialog', name: 'PuzzleController');
+        final progress =
+            await _dbHelper.getUserProgressByCategory(currentCategoryId.value);
+
+        if (progress != null) {
+          final currentScore =
+              (progress['current_score'] as int? ?? 0) + (isCorrect ? 1 : 0);
+          final maxQuestions = progress['max_questions'] as int? ?? 0;
+
+          await _dbHelper.updateUserProgress(
+            categoryId: currentCategoryId.value,
+            currentScore: currentScore,
+            isCompleted: currentScore >= maxQuestions,
+          );
+        }
+      }
 
       Get.dialog(
         AlertDialog(
-          title: Text(isCorrect ? 'Selesai! 🎊' : 'Coba Lagi 😊'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            isCorrect ? 'Selesai! 🎊' : 'Coba Lagi 😊',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Text(
             isCorrect
                 ? 'Kamu berhasil menebak kata "${correctAnswer.value}" dengan benar!'
@@ -320,8 +312,6 @@ class PuzzleController extends GetxController {
           actions: [
             TextButton(
               onPressed: () {
-                developer.log('👈 Back button pressed',
-                    name: 'PuzzleController');
                 Get.back(); // Close dialog
                 Get.back(); // Back to level selection
               },
@@ -330,9 +320,7 @@ class PuzzleController extends GetxController {
             if (!isCorrect)
               ElevatedButton(
                 onPressed: () {
-                  developer.log('🔄 Retry button pressed',
-                      name: 'PuzzleController');
-                  Get.back(); // Close dialog
+                  Get.back();
                   startLevel(currentWordId.value, correctAnswer.value);
                 },
                 child: const Text('Main Lagi'),
@@ -340,10 +328,8 @@ class PuzzleController extends GetxController {
             if (isCorrect)
               ElevatedButton(
                 onPressed: () {
-                  developer.log('➡️ Next level button pressed',
-                      name: 'PuzzleController');
-                  Get.back(); // Close dialog
-                  Get.back(); // Back to level selection
+                  Get.back();
+                  Get.back();
                 },
                 child: const Text('Level Berikutnya'),
               )
@@ -358,47 +344,46 @@ class PuzzleController extends GetxController {
         error: e,
         stackTrace: stackTrace,
       );
-      Get.snackbar(
-        'Error',
-        'Gagal menyimpan progress: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Error', 'Gagal menyimpan progress: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
+  // ==========================================
+  // BYPASS: Semua kategori UNLOCKED
+  // ==========================================
   Future<bool> isCategoryLocked(int categoryId) async {
-    developer.log('🔒 Checking if category $categoryId is locked',
+    // Bypass mode: semua unlocked
+    if (bypassLock) {
+      developer.log('🔓 BYPASS: Category $categoryId is UNLOCKED',
+          name: 'PuzzleController');
+      return false; // Tidak terkunci
+    }
+
+    // Production mode: cek lock berdasarkan progress
+    developer.log('🔒 Checking lock for category $categoryId',
         name: 'PuzzleController');
 
     if (categoryId == 1) {
       final alfabetProgress = await _dbHelper.getUserProgressByCategory(6);
-      final isLocked = alfabetProgress?['is_completed'] != 1 &&
-          alfabetProgress?['is_completed'] != true;
-      developer.log('🔒 Category 1 locked: $isLocked (depends on Alfabet)',
-          name: 'PuzzleController');
-      return isLocked;
+      return alfabetProgress?['is_completed'] != 1;
     }
 
     if (categoryId > 1 && categoryId <= 5) {
       final previousProgress =
           await _dbHelper.getUserProgressByCategory(categoryId - 1);
-      final isLocked = previousProgress?['is_completed'] != 1 &&
-          previousProgress?['is_completed'] != true;
-      developer.log(
-          '🔒 Category $categoryId locked: $isLocked (depends on category ${categoryId - 1})',
-          name: 'PuzzleController');
-      return isLocked;
+      return previousProgress?['is_completed'] != 1;
     }
 
-    developer.log('🔒 Category $categoryId is unlocked',
-        name: 'PuzzleController');
     return false;
   }
 
   Future<bool> isLevelCompleted(int wordId) async {
-    final isCompleted = await _dbHelper.isWordCompletedInMode(wordId, modeId);
-    developer.log('✔️ Level $wordId completed: $isCompleted',
-        name: 'PuzzleController');
-    return isCompleted;
+    // Bypass mode: semua belum selesai (untuk testing)
+    if (bypassLock) {
+      return false;
+    }
+
+    return await _dbHelper.isWordCompletedInMode(wordId, modeId);
   }
 }
