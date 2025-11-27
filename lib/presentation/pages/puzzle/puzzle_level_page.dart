@@ -1,3 +1,4 @@
+import 'package:alphalearn/presentation/widget/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/core.dart';
@@ -11,15 +12,7 @@ class PuzzleLevelPage extends StatelessWidget {
     final controller = Get.find<PuzzleController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Obx(() {
-          final category = controller.categories.firstWhereOrNull(
-            (cat) => cat['category_id'] == controller.currentCategoryId.value,
-          );
-          return Text(category?['name'] ?? 'Pilih Level');
-        }),
-        centerTitle: true,
-      ),
+      appBar: AppBarCustom(),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -52,38 +45,44 @@ class PuzzleLevelPage extends StatelessWidget {
               ],
             ),
           ),
-          child: GridView.builder(
-            padding: AppSizes.paddingAllLg,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 1,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: controller.levels.length,
-            itemBuilder: (context, index) {
-              final level = controller.levels[index];
-              final wordId = level['word_id'] as int;
-              final word = level['word'] as String;
-              final levelNumber = index + 1;
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 20,
+                runSpacing: 20,
+                children: List.generate(controller.levels.length, (index) {
+                  final level = controller.levels[index];
+                  final wordId = level['word_id'] as int;
+                  final word = level['word'] as String;
+                  final levelNumber = index + 1;
 
-              return FutureBuilder<bool>(
-                future: controller.isLevelCompleted(wordId),
-                builder: (context, snapshot) {
-                  final isCompleted = snapshot.data ?? false;
+                  return FutureBuilder<bool>(
+                    future: controller.isLevelCompleted(wordId),
+                    builder: (context, snapshot) {
+                      final isCompleted = snapshot.data ?? false;
 
-                  return _LevelCard(
-                    levelNumber: levelNumber,
-                    word: word,
-                    isCompleted: isCompleted,
-                    onTap: () async {
-                      await controller.startLevel(wordId, word);
-                      Get.toNamed(AppConstants.puzzleRoute);
+                      return _LevelCard(
+                        levelNumber: levelNumber,
+                        word: word,
+                        isCompleted: isCompleted,
+                        imgAsset: level['image_asset'] ??
+                            'assets/images/apel_level_img.png',
+                        onTap: () async {
+                          await controller.startLevel(
+                            wordId,
+                            word,
+                            imageAsset: level['image_asset'],
+                          );
+                          Get.toNamed(AppConstants.puzzleRoute);
+                        },
+                      );
                     },
                   );
-                },
-              );
-            },
+                }),
+              ),
+            ),
           ),
         );
       }),
@@ -95,6 +94,7 @@ class _LevelCard extends StatelessWidget {
   final int levelNumber;
   final String word;
   final bool isCompleted;
+  final String imgAsset;
   final VoidCallback onTap;
 
   const _LevelCard({
@@ -102,71 +102,83 @@ class _LevelCard extends StatelessWidget {
     required this.word,
     required this.isCompleted,
     required this.onTap,
+    required this.imgAsset,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: isCompleted ? 6 : 2,
-      borderRadius: AppSizes.borderRadiusMd,
-      color: isCompleted ? const Color(0xFF4CAF50) : AppColors.white,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppSizes.borderRadiusMd,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: AppSizes.borderRadiusMd,
-            border: Border.all(
-              color: isCompleted ? Colors.green.shade700 : AppColors.primary,
-              width: 2,
+    // Card lebih besar: 140 x 160
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: Material(
+        elevation: isCompleted ? 8 : 4,
+        borderRadius: BorderRadius.circular(20),
+        shadowColor: isCompleted
+            ? Colors.green.withOpacity(0.4)
+            : AppColors.primary.withOpacity(0.3),
+        color: isCompleted ? const Color(0xFF4CAF50) : AppColors.white,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isCompleted ? Colors.green.shade700 : AppColors.primary,
+                width: 2.5,
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Level number badge
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isCompleted
-                      ? Colors.white.withOpacity(0.3)
-                      : AppColors.primary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Level $levelNumber',
-                  style: AppTextStyles.textTheme.labelSmall?.copyWith(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Word
+                Text(
+                  word,
+                  style: AppTextStyles.textTheme.titleLarge?.copyWith(
                     color: isCompleted ? Colors.white : AppColors.primary,
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 8),
+
+                // Image lebih besar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    imgAsset,
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: isCompleted
+                              ? Colors.white.withOpacity(0.2)
+                              : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 40,
+                          color: isCompleted ? Colors.white70 : Colors.grey,
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 8),
-
-              // Word
-              Text(
-                word,
-                style: AppTextStyles.textTheme.titleLarge?.copyWith(
-                  color: isCompleted ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: 4),
-
-              // Status icon
-              Icon(
-                isCompleted ? Icons.check_circle : Icons.play_circle_outline,
-                color: isCompleted ? Colors.white : AppColors.primary,
-                size: 24,
-              ),
-            ],
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),

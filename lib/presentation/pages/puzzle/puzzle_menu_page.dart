@@ -4,6 +4,8 @@ import 'package:alphalearn/presentation/widget/card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../widget/app_bar_custom.dart';
+
 class PuzzleMenuPage extends StatelessWidget {
   const PuzzleMenuPage({super.key});
 
@@ -12,10 +14,7 @@ class PuzzleMenuPage extends StatelessWidget {
     final controller = Get.find<PuzzleController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pilih Kategori'),
-        centerTitle: true,
-      ),
+      appBar: AppBarCustom(),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());

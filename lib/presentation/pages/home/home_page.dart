@@ -2,6 +2,7 @@ import 'package:alphalearn/core/core.dart';
 import 'package:alphalearn/presentation/pages/home/about/about_tab.dart';
 import 'package:alphalearn/presentation/pages/home/menu/menu_tab.dart';
 import 'package:alphalearn/presentation/pages/home/progress/progress_tab.dart';
+import 'package:alphalearn/presentation/widget/app_bar_custom.dart';
 import 'package:alphalearn/presentation/widget/circle_tab.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -67,19 +68,8 @@ class _HomePageState extends State<HomePage>
       onBottomBarShown: () {},
       body: (context, controller) => Scaffold(
         backgroundColor: AppColors.white,
-        appBar: AppBar(
-          elevation: 24.0,
-          shadowColor: Colors.black.withOpacity(0.5),
-          backgroundColor: AppColors.white,
-          surfaceTintColor: Colors.transparent,
-          leading: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Image.asset(
-              "assets/images/logo_app.png",
-              fit: BoxFit.contain,
-            ),
-          ),
+        appBar: AppBarCustom(
+          height: 70,
         ),
         body: Stack(
           children: [
