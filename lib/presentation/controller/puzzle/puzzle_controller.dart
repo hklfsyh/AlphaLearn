@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:alphalearn/core/core.dart';
 import 'package:alphalearn/database/database_helper.dart';
+import 'package:alphalearn/presentation/widget/puzzle_result_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -27,6 +28,8 @@ class PuzzleController extends GetxController {
   final RxList<String> answerOptions = <String>[].obs;
 
   final int modeId = 1; // Tebak Huruf
+
+  final RxString currentImage = ''.obs;
 
   // ==========================================
   // BYPASS MODE - Set true untuk testing
@@ -145,7 +148,7 @@ class PuzzleController extends GetxController {
     }
   }
 
-  Future<void> startLevel(int wordId, String word) async {
+  Future<void> startLevel(int wordId, String word, {String? imageAsset}) async {
     try {
       developer.log('🎯 Starting level: wordId=$wordId, word=$word',
           name: 'PuzzleController');
@@ -155,6 +158,7 @@ class PuzzleController extends GetxController {
 
       currentWordId.value = wordId;
       correctAnswer.value = word.toUpperCase();
+      currentImage.value = imageAsset ?? 'assets/images/apel_level_img.png';
 
       currentQuestionIndex.value = 0;
       score.value = 0;
@@ -295,47 +299,17 @@ class PuzzleController extends GetxController {
         }
       }
 
-      Get.dialog(
-        AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            isCorrect ? 'Selesai! 🎊' : 'Coba Lagi 😊',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            isCorrect
-                ? 'Kamu berhasil menebak kata "${correctAnswer.value}" dengan benar!'
-                : 'Jangan menyerah! Coba lagi untuk menyelesaikan level ini.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Get.back(); // Close dialog
-                Get.back(); // Back to level selection
-              },
-              child: const Text('Kembali'),
-            ),
-            if (!isCorrect)
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                  startLevel(currentWordId.value, correctAnswer.value);
-                },
-                child: const Text('Main Lagi'),
-              ),
-            if (isCorrect)
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                  Get.back();
-                },
-                child: const Text('Level Berikutnya'),
-              )
-          ],
-        ),
-        barrierDismissible: false,
+      PuzzleResultDialog.show(
+        isCorrect: isCorrect,
+        word: correctAnswer.value,
+        onBack: () {
+          Get.back();
+          Get.back();
+        },
+        onRetry: () {
+          Get.back();
+          startLevel(currentWordId.value, correctAnswer.value);
+        },
       );
     } catch (e, stackTrace) {
       developer.log(
