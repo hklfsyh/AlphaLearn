@@ -16,7 +16,7 @@ class AboutTab extends StatelessWidget {
             Positioned(
               left: 10,
               child: Image.asset(
-                'assets/images/asset_monyet.png',
+                'assets/images/monyet.png',
                 width: 296,
                 height: 296,
               ),

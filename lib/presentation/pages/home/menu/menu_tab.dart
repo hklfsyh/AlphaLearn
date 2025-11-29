@@ -11,40 +11,57 @@ class MenuTab extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth * 0.60;
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: Colors.transparent,
-      child: ListView(
-        padding: AppSizes.paddingAllLg.copyWith(
-          top: AppSizes.paddingXl * 1.5,
-          bottom: AppSizes.bottomNavHeight + AppSizes.paddingLg,
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.transparent,
+          child: ListView(
+            padding: AppSizes.paddingAllLg.copyWith(
+              top: AppSizes.paddingXl * 1.5,
+              bottom: AppSizes.bottomNavHeight + AppSizes.paddingLg,
+            ),
+            children: [
+              Center(
+                child: CardWidget(
+                  onTap: () => Get.toNamed(AppConstants.alfabethMenuRoute),
+                  width: cardWidth,
+                  height: cardWidth,
+                  title: "Belajar Alfabet",
+                  imagePath: 'assets/images/alfabeth.png',
+                  backgroundColor: AppColors.cream,
+                ),
+              ),
+              SizedBox(height: AppSizes.paddingXl * 1.5),
+              Center(
+                child: CardWidget(
+                  onTap: () => Get.toNamed(AppConstants.puzzleMenuRoute),
+                  width: cardWidth,
+                  height: cardWidth,
+                  title: "Tebak Huruf",
+                  imagePath: 'assets/images/tebakhuruf.png',
+                  backgroundColor: AppColors.grey,
+                ),
+              ),
+              SizedBox(height: AppSizes.paddingLg),
+            ],
+          ),
         ),
-        children: [
-          Center(
-            child: CardWidget(
-              onTap: () => Get.toNamed(AppConstants.alfabethMenuRoute),
-              width: cardWidth,
-              height: cardWidth,
-              title: "Belajar Alfabet",
-              imagePath: 'assets/images/alfabeth.png',
-              backgroundColor: AppColors.cream,
-            ),
+        // Development only - floating button untuk database debug
+        // HAPUS sebelum production!
+        Positioned(
+          right: 16,
+          bottom: AppSizes.bottomNavHeight + 16,
+          child: FloatingActionButton(
+            mini: true,
+            backgroundColor: Colors.orange,
+            onPressed: () => Get.toNamed(AppConstants.databaseDebugRoute),
+            tooltip: 'Database Debug',
+            child: const Icon(Icons.bug_report, size: 20),
           ),
-          SizedBox(height: AppSizes.paddingXl * 1.5),
-          Center(
-            child: CardWidget(
-              onTap: () => Get.toNamed(AppConstants.puzzleMenuRoute),
-              width: cardWidth,
-              height: cardWidth,
-              title: "Tebak Huruf",
-              imagePath: 'assets/images/tebakhuruf.png',
-              backgroundColor: AppColors.grey,
-            ),
-          ),
-          SizedBox(height: AppSizes.paddingLg),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

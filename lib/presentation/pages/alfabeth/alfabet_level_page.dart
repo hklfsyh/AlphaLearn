@@ -1,7 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/core.dart';
 import '../../controller/alfabeth/alfabeth_controller.dart';
+import '../../widget/app_bar_custom.dart';
 
 class AlfabetLevelPage extends StatefulWidget {
   const AlfabetLevelPage({super.key});
@@ -25,11 +27,74 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
   Offset? leftAnswerPosition;
   Offset? rightAnswerPosition;
 
+  // List untuk menyimpan jawaban yang akan ditampilkan (termasuk distractor)
+  List<Map<String, dynamic>> answerOptions = [];
+
+  final Random _random = Random();
+
   @override
   void initState() {
     super.initState();
     currentLevel = Get.arguments ?? 'A';
     controller = Get.find<AlfabetController>();
+    _generateAnswerOptions();
+  }
+
+  // Generate jawaban benar + 3 distractor, lalu acak urutannya
+  void _generateAnswerOptions() {
+    final allLevels = ['a', 'b', 'c', 'd', 'e'];
+    final currentLowerLevel = currentLevel.toLowerCase();
+
+    // Hapus level saat ini dari daftar
+    final otherLevels = allLevels.where((l) => l != currentLowerLevel).toList();
+
+    // Buat list untuk menyimpan distractor yang sudah dipilih
+    List<String> selectedDistractors = [];
+
+    // Generate 3 distractor yang berbeda
+    while (selectedDistractors.length < 3 && otherLevels.isNotEmpty) {
+      final distractorLevel = otherLevels[_random.nextInt(otherLevels.length)];
+      final distractorSide = _random.nextBool() ? '1' : '2';
+      final distractorImage =
+          'assets/images/${distractorLevel}filled$distractorSide.png';
+
+      // Pastikan tidak ada duplikat
+      if (!selectedDistractors.contains(distractorImage)) {
+        selectedDistractors.add(distractorImage);
+      }
+    }
+
+    // Buat list jawaban: 2 benar + 3 salah
+    answerOptions = [
+      {
+        'type': 'left', // Jawaban benar kiri
+        'image': 'assets/images/${currentLowerLevel}filled1.png',
+        'isCorrect': true,
+      },
+      {
+        'type': 'right', // Jawaban benar kanan
+        'image': 'assets/images/${currentLowerLevel}filled2.png',
+        'isCorrect': true,
+      },
+      {
+        'type': 'distractor', // Jawaban pengecoh 1
+        'image': selectedDistractors[0],
+        'isCorrect': false,
+      },
+      {
+        'type': 'distractor', // Jawaban pengecoh 2
+        'image': selectedDistractors[1],
+        'isCorrect': false,
+      },
+      {
+        'type': 'distractor', // Jawaban pengecoh 3
+        'image': selectedDistractors[2],
+        'isCorrect': false,
+      },
+    ];
+
+    // Acak urutan jawaban
+    answerOptions.shuffle(_random);
   }
 
   String _getLeftAnswerImage() {
@@ -175,17 +240,79 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
     });
   }
 
+  // Method untuk membangun setiap kotak jawaban
+  Widget _buildAnswerBox(Map<String, dynamic> option, double answerSize) {
+    final type = option['type'] as String;
+    final image = option['image'] as String;
+
+    // Cek apakah jawaban ini sudah diisi
+    final isFilled =
+        (type == 'left' && leftFilled) || (type == 'right' && rightFilled);
+
+    // Jika sudah diisi, tampilkan icon centang
+    if (isFilled) {
+      return Container(
+        width: answerSize,
+        height: answerSize,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          Icons.check_circle,
+          color: Colors.white,
+          size: 40,
+        ),
+      );
+    }
+
+    // Tampilkan draggable (untuk jawaban benar atau distractor yang belum diisi)
+    return Draggable<String>(
+      data: type, // 'left', 'right', atau 'distractor'
+      feedback: Material(
+        color: Colors.transparent,
+        child: Opacity(
+          opacity: 0.7,
+          child: Container(
+            width: answerSize,
+            height: answerSize,
+            child: Image.asset(
+              image,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+      childWhenDragging: Container(
+        width: answerSize,
+        height: answerSize,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Container(
+        width: answerSize,
+        height: answerSize,
+        child: Image.asset(
+          image,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final questionSize = screenSize.width * 0.7;
-    final answerSize = screenSize.width * 0.25;
+    final answerSize = screenSize.width * 0.18; // Dikecilkan dari 0.25 ke 0.18
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Level $currentLevel'),
-        centerTitle: true,
-        backgroundColor: AppColors.primary,
+      appBar: AppBarCustom(
+        title: 'Level $currentLevel',
+        showBackButton: true,
+        height: 70,
       ),
       body: Container(
         width: double.infinity,
@@ -202,37 +329,22 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
         ),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-
-            // Instruksi
+            // Teks Perintah Soal - Di bawah AppBar (Style seperti game tebak huruf)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Text(
+                'Pilih balok yang sesuai agar membentuk huruf ini',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  letterSpacing: 0.5,
                 ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.blue),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Seret potongan huruf ke tempatnya!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                textAlign: TextAlign.center,
               ),
             ),
 
-            const SizedBox(height: 40), // Area Soal (Drop Target)
+            // Area Soal (Drop Target)
             Expanded(
               child: Center(
                 child: SizedBox(
@@ -268,6 +380,11 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
                                   bottom: 0,
                                   width: questionSize / 2,
                                   child: DragTarget<String>(
+                                    onWillAcceptWithDetails: (details) {
+                                      // Hanya terima jika data adalah 'left' dan belum diisi
+                                      return details.data == 'left' &&
+                                          !leftFilled;
+                                    },
                                     onAcceptWithDetails: (details) {
                                       if (details.data == 'left' &&
                                           !leftFilled) {
@@ -290,6 +407,11 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
                                   bottom: 0,
                                   width: questionSize / 2,
                                   child: DragTarget<String>(
+                                    onWillAcceptWithDetails: (details) {
+                                      // Hanya terima jika data adalah 'right' dan belum diisi
+                                      return details.data == 'right' &&
+                                          !rightFilled;
+                                    },
                                     onAcceptWithDetails: (details) {
                                       if (details.data == 'right' &&
                                           !rightFilled) {
@@ -319,6 +441,11 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
                                     bottom: 0,
                                     width: questionSize / 2 + 10,
                                     child: DragTarget<String>(
+                                      onWillAcceptWithDetails: (details) {
+                                        // Hanya terima jika data adalah 'left' dan belum diisi
+                                        return details.data == 'left' &&
+                                            !leftFilled;
+                                      },
                                       onAcceptWithDetails: (details) {
                                         if (details.data == 'left' &&
                                             !leftFilled) {
@@ -344,6 +471,11 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
                                     bottom: 0,
                                     width: questionSize / 2 + 10,
                                     child: DragTarget<String>(
+                                      onWillAcceptWithDetails: (details) {
+                                        // Hanya terima jika data adalah 'right' dan belum diisi
+                                        return details.data == 'right' &&
+                                            !rightFilled;
+                                      },
                                       onAcceptWithDetails: (details) {
                                         if (details.data == 'right' &&
                                             !rightFilled) {
@@ -368,125 +500,66 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
 
-            // Area Jawaban (Draggable)
+            // Area Jawaban (Draggable) dengan background hijau - DIPERBESAR dengan border radius
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Color(0xFF2A5731), // Hijau gelap
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, -8),
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Jawaban Kiri
-                  if (!leftFilled)
-                    Draggable<String>(
-                      data: 'left',
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: Opacity(
-                          opacity: 0.7,
-                          child: Container(
-                            width: answerSize,
-                            height: answerSize,
-                            child: Image.asset(
-                              _getLeftAnswerImage(),
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                      childWhenDragging: Container(
-                        width: answerSize,
-                        height: answerSize,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Container(
-                        width: answerSize,
-                        height: answerSize,
-                        child: Image.asset(
-                          _getLeftAnswerImage(),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: answerSize,
-                      height: answerSize,
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 48,
-                      ),
+                  // Teks "Balok Tersedia"
+                  Text(
+                    'Balok Tersedia',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
 
-                  // Jawaban Kanan
-                  if (!rightFilled)
-                    Draggable<String>(
-                      data: 'right',
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: Opacity(
-                          opacity: 0.7,
-                          child: Container(
-                            width: answerSize,
-                            height: answerSize,
-                            child: Image.asset(
-                              _getRightAnswerImage(),
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
+                  // Grid Jawaban - 3 di atas, 2 di bawah
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Baris pertama: 3 kotak
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: answerOptions.take(3).map((option) {
+                          return _buildAnswerBox(option, answerSize);
+                        }).toList(),
                       ),
-                      childWhenDragging: Container(
-                        width: answerSize,
-                        height: answerSize,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      const SizedBox(height: 16),
+                      // Baris kedua: 2 kotak (center)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          SizedBox(width: answerSize), // Spacer kiri
+                          ...answerOptions.skip(3).take(2).map((option) {
+                            return _buildAnswerBox(option, answerSize);
+                          }).toList(),
+                          SizedBox(width: answerSize), // Spacer kanan
+                        ],
                       ),
-                      child: Container(
-                        width: answerSize,
-                        height: answerSize,
-                        child: Image.asset(
-                          _getRightAnswerImage(),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: answerSize,
-                      height: answerSize,
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 48,
-                      ),
-                    ),
+                    ],
+                  ),
                 ],
               ),
             ),

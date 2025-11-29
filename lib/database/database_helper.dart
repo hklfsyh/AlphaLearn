@@ -1,9 +1,22 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+/// DatabaseHelper untuk AlphaLearn App
+///
+/// Struktur Database untuk Progressive Unlocking System:
+/// - Semua level dikunci saat install pertama kali
+/// - Hanya Alfabet Level A yang terbuka
+/// - Level unlock secara berurutan setelah menyelesaikan level sebelumnya
+///
+/// Flow Unlock:
+/// 1. Alfabet A → B → C → D → E (Mode Alfabet)
+/// 2. Selesai Alfabet E → Tebak Huruf Buah Level 1
+/// 3. Buah 1 → 2 → 3 → 4 → 5
+/// 4. Selesai Buah 5 → Binatang 1 → 2 → 3 → 4 → 5
+/// 5. Selesai Binatang 5 → Tubuh 1 → 2 → 3 → 4 → 5
+/// 6. Selesai Tubuh 5 → Benda 1 → 2 → 3 → 4 → 5
+/// 7. Selesai Benda 5 → Keluarga 1 → 2 → 3 → 4 → 5
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
@@ -12,18 +25,11 @@ class DatabaseHelper {
 
   factory DatabaseHelper() => _instance;
 
-  // Method untuk initialize database - panggil ini di main() atau splash screen
+  /// Initialize database - panggil di main() atau splash screen
   static Future<void> initialize() async {
     final instance = DatabaseHelper();
-    await instance
-        .database; // Ini akan trigger _initDatabase dan _onCreate jika database belum ada
-    print('Database AlphaLearn initialized successfully');
-  }
-
-  Future<void> deleteDatabase() async {
-    String path = join(await getDatabasesPath(), 'alphalearn.db');
-    await databaseFactory.deleteDatabase(path);
-    print('Database AlphaLearn deleted successfully');
+    await instance.database;
+    print('✅ Database AlphaLearn initialized successfully');
   }
 
   Future<Database> get database async {
@@ -33,7 +39,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'alphalearn.db');
+    String path = join(await getDatabasesPath(), 'alphalearn_v2.db');
 
     return await openDatabase(
       path,
@@ -42,398 +48,623 @@ class DatabaseHelper {
     );
   }
 
+  /// Reset database - hapus dan buat ulang dari awal
+  /// Gunakan untuk testing atau reset progress user
+  Future<void> resetDatabase() async {
+    try {
+      if (_database != null) {
+        await _database!.close();
+        _database = null;
+      }
+
+      String path = join(await getDatabasesPath(), 'alphalearn_v2.db');
+      await databaseFactory.deleteDatabase(path);
+      print('🗑️ Database deleted');
+
+      await database;
+      print('✅ Database recreated with fresh data');
+    } catch (e) {
+      print('❌ Error resetting database: $e');
+      rethrow;
+    }
+  }
+
   Future<void> _onCreate(Database db, int version) async {
-    // Create Category table
+    // ========== TABLE: categories ==========
+    // Menyimpan kategori (Buah, Binatang, Tubuh, Benda, Keluarga, Alfabet)
     await db.execute('''
-      CREATE TABLE Category (
+      CREATE TABLE categories (
         category_id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
-        sequence_order INTEGER NOT NULL
+        sequence_order INTEGER NOT NULL,
+        description TEXT,
+        icon_path TEXT
       )
     ''');
 
-    // Create GameMode table
+    // ========== TABLE: game_modes ==========
+    // Menyimpan mode game (Tebak Huruf, Alfabet)
     await db.execute('''
-      CREATE TABLE GameMode (
+      CREATE TABLE game_modes (
         mode_id INTEGER PRIMARY KEY,
-        mode_name TEXT NOT NULL
+        mode_name TEXT NOT NULL,
+        description TEXT
       )
     ''');
 
-    // Create ContentWord table
+    // ========== TABLE: levels ==========
+    // Menyimpan semua level dari semua kategori dan mode
+    // global_sequence: urutan global untuk progressive unlock
     await db.execute('''
-      CREATE TABLE ContentWord (
+      CREATE TABLE levels (
+        level_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER NOT NULL,
+        mode_id INTEGER NOT NULL,
+        level_number INTEGER NOT NULL,
+        global_sequence INTEGER NOT NULL UNIQUE,
+        word_id INTEGER,
+        FOREIGN KEY (category_id) REFERENCES categories (category_id),
+        FOREIGN KEY (mode_id) REFERENCES game_modes (mode_id),
+        FOREIGN KEY (word_id) REFERENCES words (word_id)
+      )
+    ''');
+
+    // ========== TABLE: words ==========
+    // Menyimpan data kata/huruf beserta asset gambar
+    await db.execute('''
+      CREATE TABLE words (
         word_id INTEGER PRIMARY KEY,
         category_id INTEGER NOT NULL,
         word TEXT NOT NULL,
         image_asset TEXT,
-        FOREIGN KEY (category_id) REFERENCES Category (category_id)
+        description TEXT,
+        FOREIGN KEY (category_id) REFERENCES categories (category_id)
       )
     ''');
 
-    // Create UserProgress table
+    // ========== TABLE: user_progress ==========
+    // Tracking progress user per level
+    // is_unlocked: level ini sudah terbuka atau masih terkunci
+    // is_completed: level ini sudah diselesaikan atau belum
+    // score: skor yang didapat (0-100 atau sesuai kebutuhan)
+    // stars: bintang yang didapat (1-3)
     await db.execute('''
-      CREATE TABLE UserProgress (
-        progress_id INTEGER PRIMARY KEY,
-        category_id INTEGER NOT NULL,
-        current_score INTEGER NOT NULL DEFAULT 0,
-        max_questions INTEGER NOT NULL,
-        is_completed BOOLEAN NOT NULL DEFAULT 0,
-        FOREIGN KEY (category_id) REFERENCES Category (category_id)
+      CREATE TABLE user_progress (
+        progress_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        level_id INTEGER NOT NULL UNIQUE,
+        is_unlocked INTEGER NOT NULL DEFAULT 0,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        score INTEGER DEFAULT 0,
+        stars INTEGER DEFAULT 0,
+        completed_at TEXT,
+        FOREIGN KEY (level_id) REFERENCES levels (level_id)
       )
     ''');
 
-    // Create ActivityCompletion table
-    await db.execute('''
-      CREATE TABLE ActivityCompletion (
-        completion_id INTEGER PRIMARY KEY,
-        word_id INTEGER NOT NULL,
-        mode_id INTEGER NOT NULL,
-        is_completed BOOLEAN NOT NULL DEFAULT 0,
-        FOREIGN KEY (word_id) REFERENCES ContentWord (word_id),
-        FOREIGN KEY (mode_id) REFERENCES GameMode (mode_id)
-      )
-    ''');
-
-    // Insert dummy data from JSON file
-    await _insertDummyDataFromJson(db);
+    // Insert initial data
+    await _insertInitialData(db);
   }
 
-  Future<void> _insertDummyDataFromJson(Database db) async {
-    try {
-      String jsonString =
-          await rootBundle.loadString('assets/json/dummy_data.json');
-      Map<String, dynamic> jsonData = json.decode(jsonString);
-
-      // Insert Category data
-      List<dynamic> categoryData = jsonData['category_data'] ?? [];
-      for (var category in categoryData) {
-        await db.insert('Category', {
-          'category_id': category['category_id'],
-          'name': category['name'],
-          'sequence_order': category['sequence_order'],
-        });
-      }
-
-      // Insert GameMode data
-      List<dynamic> gameModeData = jsonData['gamemode_data'] ?? [];
-      for (var gameMode in gameModeData) {
-        await db.insert('GameMode', {
-          'mode_id': gameMode['mode_id'],
-          'mode_name': gameMode['mode_name'],
-        });
-      }
-
-      // Insert ContentWord data
-      List<dynamic> contentWordData = jsonData['contentword_data'] ?? [];
-      for (var contentWord in contentWordData) {
-        await db.insert('ContentWord', {
-          'word_id': contentWord['word_id'],
-          'category_id': contentWord['category_id'],
-          'word': contentWord['word'],
-          'image_asset':
-              contentWord['image_asset'], // null values akan dihandle otomatis
-        });
-      }
-
-      // Insert UserProgress data
-      List<dynamic> userProgressData = jsonData['userprogress_data'] ?? [];
-      for (var userProgress in userProgressData) {
-        await db.insert('UserProgress', {
-          'progress_id': userProgress['progress_id'],
-          'category_id': userProgress['category_id'],
-          'current_score': userProgress['current_score'],
-          'max_questions': userProgress['max_questions'],
-          'is_completed': userProgress['is_completed'] ? 1 : 0,
-        });
-      }
-
-      // ActivityCompletion - KOSONG, biarkan ter-create saat user bermain
-      // Tidak ada insert dummy data untuk ActivityCompletion karena ini adalah history completion
-
-      print('Dummy data loaded successfully from JSON');
-    } catch (e) {
-      print('Error loading dummy data from JSON: $e');
-      // Fallback: insert minimal data if JSON fails
-      await _insertFallbackData(db);
-    }
-  }
-
-  Future<void> _insertFallbackData(Database db) async {
-    // Fallback data jika JSON gagal load
-    await db.insert('Category', {
+  Future<void> _insertInitialData(Database db) async {
+    // ========== INSERT CATEGORIES ==========
+    await db.insert('categories', {
       'category_id': 1,
       'name': 'Buah',
       'sequence_order': 1,
+      'description': 'Kategori untuk belajar nama-nama buah',
+      'icon_path': 'assets/images/buah.png',
     });
 
-    await db.insert('GameMode', {
+    await db.insert('categories', {
+      'category_id': 2,
+      'name': 'Binatang',
+      'sequence_order': 2,
+      'description': 'Kategori untuk belajar nama-nama binatang',
+      'icon_path': 'assets/images/monyet.png',
+    });
+
+    await db.insert('categories', {
+      'category_id': 3,
+      'name': 'Tubuh',
+      'sequence_order': 3,
+      'description': 'Kategori untuk belajar nama-nama bagian tubuh',
+      'icon_path': 'assets/images/tubuh.png',
+    });
+
+    await db.insert('categories', {
+      'category_id': 4,
+      'name': 'Benda',
+      'sequence_order': 4,
+      'description': 'Kategori untuk belajar nama-nama benda',
+      'icon_path': 'assets/images/furniture.png',
+    });
+
+    await db.insert('categories', {
+      'category_id': 5,
+      'name': 'Keluarga',
+      'sequence_order': 5,
+      'description': 'Kategori untuk belajar nama-nama anggota keluarga',
+      'icon_path': 'assets/images/keluarga.png',
+    });
+
+    await db.insert('categories', {
+      'category_id': 6,
+      'name': 'Alfabet',
+      'sequence_order': 0,
+      'description': 'Belajar alfabet A sampai E secara berurutan',
+      'icon_path': 'assets/images/alfabeth.png',
+    });
+
+    // ========== INSERT GAME MODES ==========
+    await db.insert('game_modes', {
       'mode_id': 1,
       'mode_name': 'Tebak Huruf',
+      'description': 'Game menebak huruf berdasarkan gambar',
     });
+
+    await db.insert('game_modes', {
+      'mode_id': 2,
+      'mode_name': 'Alfabet',
+      'description': 'Game menyusun alfabet A-Z secara berurutan',
+    });
+
+    // ========== INSERT WORDS ==========
+    // Kategori Buah (category_id: 1)
+    final buahWords = [
+      {'word_id': 101, 'word': 'APEL', 'asset': 'asset-apel.png'},
+      {'word_id': 102, 'word': 'BELIMBING', 'asset': 'asset-belimbing.png'},
+      {'word_id': 103, 'word': 'CHERRY', 'asset': 'asset-cherry.png'},
+      {'word_id': 104, 'word': 'DURIAN', 'asset': 'asset-durian.png'},
+      {'word_id': 105, 'word': 'ELDERBERRY', 'asset': 'asset-elderberry.png'},
+    ];
+
+    for (var word in buahWords) {
+      await db.insert('words', {
+        'word_id': word['word_id'],
+        'category_id': 1,
+        'word': word['word'],
+        'image_asset': 'assets/images/${word['asset']}',
+        'description': 'Buah ${word['word']}',
+      });
+    }
+
+    // Kategori Binatang (category_id: 2)
+    final binatangWords = [
+      {'word_id': 201, 'word': 'AYAM', 'asset': 'asset-ayam.png'},
+      {'word_id': 202, 'word': 'BEBEK', 'asset': 'asset-bebek.png'},
+      {'word_id': 203, 'word': 'CICAK', 'asset': 'asset-cicak.png'},
+      {'word_id': 204, 'word': 'DOMBA', 'asset': 'asset-domba.png'},
+      {'word_id': 205, 'word': 'ELANG', 'asset': 'asset-elang.png'},
+    ];
+
+    for (var word in binatangWords) {
+      await db.insert('words', {
+        'word_id': word['word_id'],
+        'category_id': 2,
+        'word': word['word'],
+        'image_asset': 'assets/images/${word['asset']}',
+        'description': 'Binatang ${word['word']}',
+      });
+    }
+
+    // Kategori Tubuh (category_id: 3)
+    final tubuhWords = [
+      {'word_id': 301, 'word': 'ALIS', 'asset': 'asset-alis.png'},
+      {'word_id': 302, 'word': 'BIBIR', 'asset': 'asset-bibir.png'},
+      {'word_id': 303, 'word': 'HIDUNG', 'asset': 'asset-hidung.png'},
+      {'word_id': 304, 'word': 'TELINGA', 'asset': 'asset-telinga.png'},
+      {'word_id': 305, 'word': 'MATA', 'asset': 'asset-mata.png'},
+    ];
+
+    for (var word in tubuhWords) {
+      await db.insert('words', {
+        'word_id': word['word_id'],
+        'category_id': 3,
+        'word': word['word'],
+        'image_asset': 'assets/images/${word['asset']}',
+        'description': 'Bagian tubuh ${word['word']}',
+      });
+    }
+
+    // Kategori Benda (category_id: 4)
+    final bendaWords = [
+      {'word_id': 401, 'word': 'KASUR', 'asset': 'asset-kasur.png'},
+      {'word_id': 402, 'word': 'KURSI', 'asset': 'asset-kursi.png'},
+      {'word_id': 403, 'word': 'LEMARI', 'asset': 'asset-lemari.png'},
+      {'word_id': 404, 'word': 'MEJA', 'asset': 'asset-meja.png'},
+      {'word_id': 405, 'word': 'SOFA', 'asset': 'asset-sofa.png'},
+    ];
+
+    for (var word in bendaWords) {
+      await db.insert('words', {
+        'word_id': word['word_id'],
+        'category_id': 4,
+        'word': word['word'],
+        'image_asset': 'assets/images/${word['asset']}',
+        'description': 'Benda ${word['word']}',
+      });
+    }
+
+    // Kategori Keluarga (category_id: 5)
+    final keluargaWords = [
+      {'word_id': 501, 'word': 'BAPAK', 'asset': 'asset-bapak.png'},
+      {'word_id': 502, 'word': 'IBU', 'asset': 'asset-ibu.png'},
+      {'word_id': 503, 'word': 'KAKEK', 'asset': 'asset-kakek.png'},
+      {'word_id': 504, 'word': 'NENEK', 'asset': 'asset-nenek.png'},
+      {'word_id': 505, 'word': 'SAUDARA', 'asset': 'asset-saudara.png'},
+    ];
+
+    for (var word in keluargaWords) {
+      await db.insert('words', {
+        'word_id': word['word_id'],
+        'category_id': 5,
+        'word': word['word'],
+        'image_asset': 'assets/images/${word['asset']}',
+        'description': 'Anggota keluarga ${word['word']}',
+      });
+    }
+
+    // Kategori Alfabet (category_id: 6) - tidak ada asset gambar
+    final alfabetWords = [
+      {'word_id': 601, 'word': 'A'},
+      {'word_id': 602, 'word': 'B'},
+      {'word_id': 603, 'word': 'C'},
+      {'word_id': 604, 'word': 'D'},
+      {'word_id': 605, 'word': 'E'},
+    ];
+
+    for (var word in alfabetWords) {
+      await db.insert('words', {
+        'word_id': word['word_id'],
+        'category_id': 6,
+        'word': word['word'],
+        'image_asset': null,
+        'description': 'Huruf Alfabet ${word['word']}',
+      });
+    }
+
+    // ========== INSERT LEVELS ==========
+    // Global Sequence untuk Progressive Unlock:
+    // 1-5: Alfabet A, B, C, D, E (Mode Alfabet)
+    // 6-10: Buah Level 1-5 (Mode Tebak Huruf)
+    // 11-15: Binatang Level 1-5 (Mode Tebak Huruf)
+    // 16-20: Tubuh Level 1-5 (Mode Tebak Huruf)
+    // 21-25: Benda Level 1-5 (Mode Tebak Huruf)
+    // 26-30: Keluarga Level 1-5 (Mode Tebak Huruf)
+
+    int globalSeq = 1;
+
+    // Mode Alfabet (mode_id: 2, category_id: 6)
+    for (int i = 0; i < 5; i++) {
+      await db.insert('levels', {
+        'category_id': 6,
+        'mode_id': 2,
+        'level_number': i + 1,
+        'global_sequence': globalSeq++,
+        'word_id': 601 + i,
+      });
+    }
+
+    // Mode Tebak Huruf - Kategori Buah (mode_id: 1, category_id: 1)
+    for (int i = 0; i < 5; i++) {
+      await db.insert('levels', {
+        'category_id': 1,
+        'mode_id': 1,
+        'level_number': i + 1,
+        'global_sequence': globalSeq++,
+        'word_id': 101 + i,
+      });
+    }
+
+    // Mode Tebak Huruf - Kategori Binatang (mode_id: 1, category_id: 2)
+    for (int i = 0; i < 5; i++) {
+      await db.insert('levels', {
+        'category_id': 2,
+        'mode_id': 1,
+        'level_number': i + 1,
+        'global_sequence': globalSeq++,
+        'word_id': 201 + i,
+      });
+    }
+
+    // Mode Tebak Huruf - Kategori Tubuh (mode_id: 1, category_id: 3)
+    for (int i = 0; i < 5; i++) {
+      await db.insert('levels', {
+        'category_id': 3,
+        'mode_id': 1,
+        'level_number': i + 1,
+        'global_sequence': globalSeq++,
+        'word_id': 301 + i,
+      });
+    }
+
+    // Mode Tebak Huruf - Kategori Benda (mode_id: 1, category_id: 4)
+    for (int i = 0; i < 5; i++) {
+      await db.insert('levels', {
+        'category_id': 4,
+        'mode_id': 1,
+        'level_number': i + 1,
+        'global_sequence': globalSeq++,
+        'word_id': 401 + i,
+      });
+    }
+
+    // Mode Tebak Huruf - Kategori Keluarga (mode_id: 1, category_id: 5)
+    for (int i = 0; i < 5; i++) {
+      await db.insert('levels', {
+        'category_id': 5,
+        'mode_id': 1,
+        'level_number': i + 1,
+        'global_sequence': globalSeq++,
+        'word_id': 501 + i,
+      });
+    }
+
+    // ========== INSERT USER PROGRESS ==========
+    // Saat install pertama kali:
+    // - Hanya Alfabet Level A (global_sequence: 1) yang unlocked
+    // - Semua level lainnya locked
+
+    List<Map<String, dynamic>> allLevels = await db.query('levels');
+
+    for (var level in allLevels) {
+      int levelId = level['level_id'] as int;
+      int globalSeq = level['global_sequence'] as int;
+
+      // Hanya level pertama (Alfabet A) yang unlocked
+      bool isUnlocked = globalSeq == 1;
+
+      await db.insert('user_progress', {
+        'level_id': levelId,
+        'is_unlocked': isUnlocked ? 1 : 0,
+        'is_completed': 0,
+        'score': 0,
+        'stars': 0,
+        'completed_at': null,
+      });
+    }
+
+    print('✅ Initial data inserted successfully');
   }
 
-  // Method untuk mengambil semua kategori
+  // ==================== QUERY METHODS ====================
+
+  /// Get all categories
   Future<List<Map<String, dynamic>>> getAllCategories() async {
     final db = await database;
-    return await db.query('Category', orderBy: 'sequence_order ASC');
+    return await db.query('categories', orderBy: 'sequence_order ASC');
   }
 
-  // Method untuk mengambil kategori berdasarkan level
-  Future<List<Map<String, dynamic>>> getCategoriesByLevel(
-      bool isCategorizedLevel) async {
-    final db = await database;
-    return await db.query(
-      'Category',
-      where: 'is_categorized_level = ?',
-      whereArgs: [isCategorizedLevel ? 1 : 0],
-      orderBy: 'sequence_order ASC',
-    );
-  }
-
-  // Method untuk mengambil kategori berdasarkan ID
+  /// Get category by ID
   Future<Map<String, dynamic>?> getCategoryById(int categoryId) async {
     final db = await database;
     List<Map<String, dynamic>> result = await db.query(
-      'Category',
+      'categories',
       where: 'category_id = ?',
       whereArgs: [categoryId],
     );
     return result.isNotEmpty ? result.first : null;
   }
 
-  // Method untuk mengambil semua game modes
+  /// Get all game modes
   Future<List<Map<String, dynamic>>> getAllGameModes() async {
     final db = await database;
-    return await db.query('GameMode', orderBy: 'mode_id ASC');
+    return await db.query('game_modes');
   }
 
-  // Method untuk mengambil game mode berdasarkan ID
-  Future<Map<String, dynamic>?> getGameModeById(int modeId) async {
-    final db = await database;
-    List<Map<String, dynamic>> result = await db.query(
-      'GameMode',
-      where: 'mode_id = ?',
-      whereArgs: [modeId],
-    );
-    return result.isNotEmpty ? result.first : null;
-  }
-
-  // Method untuk mengambil semua content words
-  Future<List<Map<String, dynamic>>> getAllContentWords() async {
-    final db = await database;
-    return await db.query('ContentWord', orderBy: 'word_id ASC');
-  }
-
-  // Method untuk mengambil content words berdasarkan kategori
-  Future<List<Map<String, dynamic>>> getContentWordsByCategory(
-      int categoryId) async {
+  /// Get levels by category and mode
+  Future<List<Map<String, dynamic>>> getLevelsByCategoryAndMode({
+    required int categoryId,
+    required int modeId,
+  }) async {
     final db = await database;
     return await db.query(
-      'ContentWord',
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
-      orderBy: 'word_id ASC',
+      'levels',
+      where: 'category_id = ? AND mode_id = ?',
+      whereArgs: [categoryId, modeId],
+      orderBy: 'level_number ASC',
     );
   }
 
-  // Method untuk mengambil content word berdasarkan ID
-  Future<Map<String, dynamic>?> getContentWordById(int wordId) async {
+  /// Get level with word and progress info
+  Future<Map<String, dynamic>?> getLevelWithDetails(int levelId) async {
     final db = await database;
-    List<Map<String, dynamic>> result = await db.query(
-      'ContentWord',
-      where: 'word_id = ?',
-      whereArgs: [wordId],
-    );
+    List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT 
+        l.*,
+        w.word,
+        w.image_asset,
+        w.description,
+        up.is_unlocked,
+        up.is_completed,
+        up.score,
+        up.stars,
+        c.name as category_name,
+        gm.mode_name
+      FROM levels l
+      LEFT JOIN words w ON l.word_id = w.word_id
+      LEFT JOIN user_progress up ON l.level_id = up.level_id
+      LEFT JOIN categories c ON l.category_id = c.category_id
+      LEFT JOIN game_modes gm ON l.mode_id = gm.mode_id
+      WHERE l.level_id = ?
+    ''', [levelId]);
+
     return result.isNotEmpty ? result.first : null;
   }
 
-  // Method untuk mengupdate image_asset dari content word
-  Future<int> updateContentWordImageAsset(int wordId, String imageAsset) async {
-    final db = await database;
-    return await db.update(
-      'ContentWord',
-      {'image_asset': imageAsset},
-      where: 'word_id = ?',
-      whereArgs: [wordId],
-    );
-  }
-
-  // Method untuk mengambil semua user progress
-  Future<List<Map<String, dynamic>>> getAllUserProgress() async {
-    final db = await database;
-    return await db.query('UserProgress', orderBy: 'progress_id ASC');
-  }
-
-  // Method untuk mengambil user progress berdasarkan kategori
-  Future<Map<String, dynamic>?> getUserProgressByCategory(
-      int categoryId) async {
-    final db = await database;
-    List<Map<String, dynamic>> result = await db.query(
-      'UserProgress',
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
-    );
-    return result.isNotEmpty ? result.first : null;
-  }
-
-  // Method untuk mengupdate progress user
-  Future<int> updateUserProgress({
-    required int categoryId,
-    required int currentScore,
-    required bool isCompleted,
-  }) async {
-    final db = await database;
-    return await db.update(
-      'UserProgress',
-      {
-        'current_score': currentScore,
-        'is_completed': isCompleted ? 1 : 0,
-      },
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
-    );
-  }
-
-  // Method untuk cek apakah kategori terkunci berdasarkan sequential logic
-  Future<bool> isCategoryLocked(int categoryId) async {
-    final db = await database;
-
-    // Kategori Alfabet (id: 6) selalu terbuka
-    if (categoryId == 6) return false;
-
-    // Untuk kategori lain, cek apakah Alfabet sudah selesai
-    List<Map<String, dynamic>> alphabetProgress = await db.query(
-      'UserProgress',
-      where: 'category_id = ? AND is_completed = ?',
-      whereArgs: [6, 1],
-    );
-
-    // Jika alfabet belum selesai, semua kategori terkunci
-    if (alphabetProgress.isEmpty) return true;
-
-    // Jika alfabet selesai, cek sequential order
-    List<Map<String, dynamic>> categoryProgress = await db.query(
-      'UserProgress',
-      where: 'category_id < ? AND is_completed = ?',
-      whereArgs: [categoryId, 0],
-    );
-
-    // Jika ada kategori sebelumnya yang belum selesai, maka terkunci
-    return categoryProgress.isNotEmpty;
-  }
-
-  // Method untuk reset semua progress (untuk testing/debugging)
-  Future<void> resetAllProgress() async {
-    final db = await database;
-    await db.update('UserProgress', {
-      'current_score': 0,
-      'is_completed': 0,
-    });
-  }
-
-  // ========== ActivityCompletion Methods ==========
-
-  // Method untuk create activity completion saat user selesai bermain
-  Future<int> insertActivityCompletion({
-    required int wordId,
-    required int modeId,
-    required bool isCompleted,
-  }) async {
-    final db = await database;
-    return await db.insert('ActivityCompletion', {
-      'word_id': wordId,
-      'mode_id': modeId,
-      'is_completed': isCompleted ? 1 : 0,
-    });
-  }
-
-  // Method untuk cek apakah word sudah diselesaikan di mode tertentu
-  Future<bool> isWordCompletedInMode(int wordId, int modeId) async {
-    final db = await database;
-    List<Map<String, dynamic>> result = await db.query(
-      'ActivityCompletion',
-      where: 'word_id = ? AND mode_id = ? AND is_completed = ?',
-      whereArgs: [wordId, modeId, 1],
-    );
-    return result.isNotEmpty;
-  }
-
-  // Method untuk mengambil semua activity completion
-  Future<List<Map<String, dynamic>>> getAllActivityCompletions() async {
-    final db = await database;
-    return await db.query('ActivityCompletion', orderBy: 'completion_id ASC');
-  }
-
-  // Method untuk mengambil completion berdasarkan kategori dan mode
-  Future<List<Map<String, dynamic>>> getCompletionsByCategoryAndMode({
+  /// Get all levels with details for a category
+  Future<List<Map<String, dynamic>>> getLevelsWithDetailsByCategory({
     required int categoryId,
     required int modeId,
   }) async {
     final db = await database;
     return await db.rawQuery('''
-      SELECT ac.*, cw.word, cw.category_id 
-      FROM ActivityCompletion ac
-      JOIN ContentWord cw ON ac.word_id = cw.word_id
-      WHERE cw.category_id = ? AND ac.mode_id = ?
-      ORDER BY ac.completion_id ASC
+      SELECT 
+        l.*,
+        w.word,
+        w.image_asset,
+        w.description,
+        up.is_unlocked,
+        up.is_completed,
+        up.score,
+        up.stars
+      FROM levels l
+      LEFT JOIN words w ON l.word_id = w.word_id
+      LEFT JOIN user_progress up ON l.level_id = up.level_id
+      WHERE l.category_id = ? AND l.mode_id = ?
+      ORDER BY l.level_number ASC
     ''', [categoryId, modeId]);
   }
 
-  // Method untuk menghitung berapa kata yang sudah diselesaikan dalam kategori tertentu
-  Future<int> getCompletedWordsCount(int categoryId, int modeId) async {
-    final db = await database;
-    List<Map<String, dynamic>> result = await db.rawQuery('''
-      SELECT COUNT(*) as count
-      FROM ActivityCompletion ac
-      JOIN ContentWord cw ON ac.word_id = cw.word_id
-      WHERE cw.category_id = ? AND ac.mode_id = ? AND ac.is_completed = 1
-    ''', [categoryId, modeId]);
-
-    return result.first['count'] as int;
-  }
-
-  // Method untuk update completion status
-  Future<int> updateActivityCompletion({
-    required int wordId,
+  /// Get category progress summary
+  Future<Map<String, dynamic>> getCategoryProgress({
+    required int categoryId,
     required int modeId,
-    required bool isCompleted,
   }) async {
     final db = await database;
 
-    // Cek apakah record sudah ada
-    List<Map<String, dynamic>> existing = await db.query(
-      'ActivityCompletion',
-      where: 'word_id = ? AND mode_id = ?',
-      whereArgs: [wordId, modeId],
+    List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT 
+        COUNT(*) as total_levels,
+        SUM(CASE WHEN up.is_completed = 1 THEN 1 ELSE 0 END) as completed_levels,
+        SUM(CASE WHEN up.is_unlocked = 1 THEN 1 ELSE 0 END) as unlocked_levels
+      FROM levels l
+      LEFT JOIN user_progress up ON l.level_id = up.level_id
+      WHERE l.category_id = ? AND l.mode_id = ?
+    ''', [categoryId, modeId]);
+
+    return result.first;
+  }
+
+  /// Complete a level and unlock next level
+  Future<void> completeLevel({
+    required int levelId,
+    required int score,
+    required int stars,
+  }) async {
+    final db = await database;
+
+    // Update progress level yang diselesaikan
+    await db.update(
+      'user_progress',
+      {
+        'is_completed': 1,
+        'score': score,
+        'stars': stars,
+        'completed_at': DateTime.now().toIso8601String(),
+      },
+      where: 'level_id = ?',
+      whereArgs: [levelId],
     );
 
-    if (existing.isNotEmpty) {
-      // Update existing record
-      return await db.update(
-        'ActivityCompletion',
-        {'is_completed': isCompleted ? 1 : 0},
-        where: 'word_id = ? AND mode_id = ?',
-        whereArgs: [wordId, modeId],
+    // Ambil global_sequence dari level yang baru diselesaikan
+    List<Map<String, dynamic>> currentLevel = await db.query(
+      'levels',
+      where: 'level_id = ?',
+      whereArgs: [levelId],
+    );
+
+    if (currentLevel.isNotEmpty) {
+      int currentGlobalSeq = currentLevel.first['global_sequence'] as int;
+
+      // Unlock level berikutnya (global_sequence + 1)
+      List<Map<String, dynamic>> nextLevel = await db.query(
+        'levels',
+        where: 'global_sequence = ?',
+        whereArgs: [currentGlobalSeq + 1],
       );
-    } else {
-      // Insert new record
-      return await insertActivityCompletion(
-        wordId: wordId,
-        modeId: modeId,
-        isCompleted: isCompleted,
-      );
+
+      if (nextLevel.isNotEmpty) {
+        int nextLevelId = nextLevel.first['level_id'] as int;
+        await db.update(
+          'user_progress',
+          {'is_unlocked': 1},
+          where: 'level_id = ?',
+          whereArgs: [nextLevelId],
+        );
+        print('✅ Level $levelId completed. Next level $nextLevelId unlocked.');
+      } else {
+        print('🎉 Level $levelId completed. All levels finished!');
+      }
     }
   }
 
-  // Method untuk reset completion dalam kategori tertentu (untuk testing)
-  Future<void> resetCategoryCompletion(int categoryId, int modeId) async {
+  /// Check if a level is unlocked
+  Future<bool> isLevelUnlocked(int levelId) async {
     final db = await database;
-    await db.rawDelete('''
-      DELETE FROM ActivityCompletion 
-      WHERE word_id IN (
-        SELECT word_id FROM ContentWord WHERE category_id = ?
-      ) AND mode_id = ?
-    ''', [categoryId, modeId]);
+    List<Map<String, dynamic>> result = await db.query(
+      'user_progress',
+      where: 'level_id = ? AND is_unlocked = 1',
+      whereArgs: [levelId],
+    );
+    return result.isNotEmpty;
+  }
+
+  /// Get current unlocked level (untuk navigation ke level terakhir yang dibuka)
+  Future<Map<String, dynamic>?> getCurrentUnlockedLevel() async {
+    final db = await database;
+    List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT l.*, up.is_unlocked, up.is_completed
+      FROM levels l
+      JOIN user_progress up ON l.level_id = up.level_id
+      WHERE up.is_unlocked = 1 AND up.is_completed = 0
+      ORDER BY l.global_sequence ASC
+      LIMIT 1
+    ''');
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  /// Reset all progress (untuk testing)
+  Future<void> resetAllProgress() async {
+    final db = await database;
+
+    // Reset semua progress
+    await db.update('user_progress', {
+      'is_unlocked': 0,
+      'is_completed': 0,
+      'score': 0,
+      'stars': 0,
+      'completed_at': null,
+    });
+
+    // Unlock hanya level pertama (global_sequence: 1)
+    List<Map<String, dynamic>> firstLevel = await db.query(
+      'levels',
+      where: 'global_sequence = 1',
+    );
+
+    if (firstLevel.isNotEmpty) {
+      int firstLevelId = firstLevel.first['level_id'] as int;
+      await db.update(
+        'user_progress',
+        {'is_unlocked': 1},
+        where: 'level_id = ?',
+        whereArgs: [firstLevelId],
+      );
+    }
+
+    print('✅ All progress reset. Only first level unlocked.');
+  }
+
+  /// Get word by ID
+  Future<Map<String, dynamic>?> getWordById(int wordId) async {
+    final db = await database;
+    List<Map<String, dynamic>> result = await db.query(
+      'words',
+      where: 'word_id = ?',
+      whereArgs: [wordId],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  /// Get all words by category
+  Future<List<Map<String, dynamic>>> getWordsByCategory(int categoryId) async {
+    final db = await database;
+    return await db.query(
+      'words',
+      where: 'category_id = ?',
+      whereArgs: [categoryId],
+      orderBy: 'word_id ASC',
+    );
   }
 }

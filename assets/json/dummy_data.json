@@ -60,43 +60,176 @@
       "word_id": 101,
       "category_id": 1,
       "word": "APEL",
-      "image_asset": null,
-      "keterangan": "Soal Buah 1/2"
+      "image_asset": "assets/images/asset-apel.png",
+      "keterangan": "Buah yang diawali huruf A"
     },
     {
       "word_id": 102,
       "category_id": 1,
       "word": "BELIMBING",
-      "image_asset": null,
-      "keterangan": "Soal Buah 2/2"
+      "image_asset": "assets/images/asset-belimbing.png",
+      "keterangan": "Buah yang diawali huruf B"
+    },
+    {
+      "word_id": 103,
+      "category_id": 1,
+      "word": "CHERRY",
+      "image_asset": "assets/images/asset-cherry.png",
+      "keterangan": "Buah yang diawali huruf C"
+    },
+    {
+      "word_id": 104,
+      "category_id": 1,
+      "word": "DURIAN",
+      "image_asset": "assets/images/asset-durian.png",
+      "keterangan": "Buah yang diawali huruf D"
+    },
+    {
+      "word_id": 105,
+      "category_id": 1,
+      "word": "ELDERBERRY",
+      "image_asset": "assets/images/asset-elderberry.png",
+      "keterangan": "Buah yang diawali huruf E"
     },
     {
       "word_id": 201,
       "category_id": 2,
       "word": "AYAM",
-      "image_asset": null,
-      "keterangan": "Soal Binatang 1/2"
+      "image_asset": "assets/images/asset-ayam.png",
+      "keterangan": "Binatang yang diawali huruf A"
     },
     {
       "word_id": 202,
       "category_id": 2,
       "word": "BEBEK",
-      "image_asset": null,
-      "keterangan": "Soal Binatang 2/2"
+      "image_asset": "assets/images/asset-bebek.png",
+      "keterangan": "Binatang yang diawali huruf B"
+    },
+    {
+      "word_id": 203,
+      "category_id": 2,
+      "word": "CICAK",
+      "image_asset": "assets/images/asset-cicak.png",
+      "keterangan": "Binatang yang diawali huruf C"
+    },
+    {
+      "word_id": 204,
+      "category_id": 2,
+      "word": "DOMBA",
+      "image_asset": "assets/images/asset-domba.png",
+      "keterangan": "Binatang yang diawali huruf D"
+    },
+    {
+      "word_id": 205,
+      "category_id": 2,
+      "word": "ELANG",
+      "image_asset": "assets/images/asset-elang.png",
+      "keterangan": "Binatang yang diawali huruf E"
     },
     {
       "word_id": 301,
       "category_id": 3,
-      "word": "MATA",
-      "image_asset": null,
-      "keterangan": "Soal Tubuh 1/2"
+      "word": "ALIS",
+      "image_asset": "assets/images/asset-alis.png",
+      "keterangan": "Bagian tubuh yang diawali huruf A"
     },
     {
       "word_id": 302,
       "category_id": 3,
+      "word": "BIBIR",
+      "image_asset": "assets/images/asset-bibir.png",
+      "keterangan": "Bagian tubuh yang diawali huruf B"
+    },
+    {
+      "word_id": 303,
+      "category_id": 3,
       "word": "HIDUNG",
-      "image_asset": null,
-      "keterangan": "Soal Tubuh 2/2"
+      "image_asset": "assets/images/asset-hidung.png",
+      "keterangan": "Bagian tubuh yang diawali huruf C (Hidung)"
+    },
+    {
+      "word_id": 304,
+      "category_id": 3,
+      "word": "TELINGA",
+      "image_asset": "assets/images/asset-telinga.png",
+      "keterangan": "Bagian tubuh yang diawali huruf D (Telinga)"
+    },
+    {
+      "word_id": 305,
+      "category_id": 3,
+      "word": "MATA",
+      "image_asset": "assets/images/asset-mata.png",
+      "keterangan": "Bagian tubuh yang diawali huruf E (Mata)"
+    },
+    {
+      "word_id": 401,
+      "category_id": 4,
+      "word": "KASUR",
+      "image_asset": "assets/images/asset-kasur.png",
+      "keterangan": "Benda yang diawali huruf A (Kasur)"
+    },
+    {
+      "word_id": 402,
+      "category_id": 4,
+      "word": "KURSI",
+      "image_asset": "assets/images/asset-kursi.png",
+      "keterangan": "Benda yang diawali huruf B (Kursi)"
+    },
+    {
+      "word_id": 403,
+      "category_id": 4,
+      "word": "LEMARI",
+      "image_asset": "assets/images/asset-lemari.png",
+      "keterangan": "Benda yang diawali huruf C (Lemari)"
+    },
+    {
+      "word_id": 404,
+      "category_id": 4,
+      "word": "MEJA",
+      "image_asset": "assets/images/asset-meja.png",
+      "keterangan": "Benda yang diawali huruf D (Meja)"
+    },
+    {
+      "word_id": 405,
+      "category_id": 4,
+      "word": "SOFA",
+      "image_asset": "assets/images/asset-sofa.png",
+      "keterangan": "Benda yang diawali huruf E (Sofa)"
+    },
+    {
+      "word_id": 501,
+      "category_id": 5,
+      "word": "BAPAK",
+      "image_asset": "assets/images/asset-bapak.png",
+      "keterangan": "Anggota keluarga yang diawali huruf A (Bapak)"
+    },
+    {
+      "word_id": 502,
+      "category_id": 5,
+      "word": "IBU",
+      "image_asset": "assets/images/asset-ibu.png",
+      "keterangan": "Anggota keluarga yang diawali huruf B (Ibu)"
+    },
+    {
+      "word_id": 503,
+      "category_id": 5,
+      "word": "KAKEK",
+      "image_asset": "assets/images/asset-kakek.png",
+      "keterangan": "Anggota keluarga yang diawali huruf C (Kakek)"
+    },
+    {
+      "word_id": 504,
+      "category_id": 5,
+      "word": "NENEK",
+      "image_asset": "assets/images/asset-nenek.png",
+      "keterangan": "Anggota keluarga yang diawali huruf D (Nenek)"
+    },
+    {
+      "word_id": 505,
+      "category_id": 5,
+      "word": "SAUDARA",
+      "image_asset": "assets/images/asset-saudara.png",
+      "keterangan": "Anggota keluarga yang diawali huruf E (Saudara)"
     },
     {
       "word_id": 601,
@@ -139,7 +272,7 @@
       "progress_id": 1,
       "category_id": 1,
       "current_score": 0,
-      "max_questions": 2,
+      "max_questions": 5,
       "is_completed": false,
       "keterangan": "Terkunci (Prasyarat Alfabet Belum Selesai)."
     },
@@ -147,7 +280,7 @@
       "progress_id": 2,
       "category_id": 2,
       "current_score": 0,
-      "max_questions": 2,
+      "max_questions": 5,
       "is_completed": false,
       "keterangan": "Terkunci (Buah belum selesai)."
     },
@@ -155,7 +288,7 @@
       "progress_id": 3,
       "category_id": 3,
       "current_score": 0,
-      "max_questions": 2,
+      "max_questions": 5,
       "is_completed": false,
       "keterangan": "Terkunci (Binatang belum selesai)."
     },
@@ -163,7 +296,7 @@
       "progress_id": 4,
       "category_id": 4,
       "current_score": 0,
-      "max_questions": 2,
+      "max_questions": 5,
       "is_completed": false,
       "keterangan": "Terkunci (Tubuh belum selesai)."
     },
@@ -171,7 +304,7 @@
       "progress_id": 5,
       "category_id": 5,
       "current_score": 0,
-      "max_questions": 2,
+      "max_questions": 5,
       "is_completed": false,
       "keterangan": "Terkunci (Benda belum selesai)."
     },

@@ -47,3 +47,27 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ==========================================
+# Development & Debug Files (Not for Production)
+# ==========================================
+
+# Debug/Dev Pages & Examples
+lib/presentation/pages/dev/
+lib/presentation/pages/examples/
+**/dev/database_debug_page.dart
+**/examples/database_implementation_example.dart
+
+# Old/Backup Files
+**/*_old.dart
+**/*.old
+**/*_backup.dart
+**/*.backup
+
+# Test/Debug Helpers
+lib/database/database_helper_old.dart
+
+# Temporary/Local Documentation
+TODO.md
+NOTES.md
+*.draft.md

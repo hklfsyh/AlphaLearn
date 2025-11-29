@@ -1,117 +1,166 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/core.dart';
 import '../../controller/alfabeth/alfabeth_controller.dart';
+import '../../widget/app_bar_custom.dart';
 
-class AlfabetMenuPage extends StatelessWidget {
+class AlfabetMenuPage extends StatefulWidget {
   const AlfabetMenuPage({super.key});
 
   @override
+  State<AlfabetMenuPage> createState() => _AlfabetMenuPageState();
+}
+
+class _AlfabetMenuPageState extends State<AlfabetMenuPage> {
+  late final AlfabetController controller;
+  static const String _needRefreshKey = 'alfabet_need_refresh';
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(AlfabetController());
+
+    // Load levels saat pertama kali page dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadLevels();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAndRefresh();
+  }
+
+  Future<void> _checkAndRefresh() async {
+    final prefs = await SharedPreferences.getInstance();
+    final needRefresh = prefs.getBool(_needRefreshKey) ?? false;
+
+    if (needRefresh && mounted) {
+      await prefs.setBool(_needRefreshKey, false);
+      await controller.loadLevels();
+    }
+  }
+
+  // Manual refresh dengan pull-to-refresh
+  Future<void> _onRefresh() async {
+    await controller.loadLevels();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Initialize controller
-    final controller = Get.put(AlfabetController());
-
-    // Data untuk 5 level alfabet
-    final List<Map<String, dynamic>> alfabetLevels = [
-      {
-        'level': 'A',
-        'title': 'Level A',
-        'icon': 'assets/images/iconlevela.png',
-        'color': const Color(0xFFFF6B6B),
-        'isLocked': false,
-      },
-      {
-        'level': 'B',
-        'title': 'Level B',
-        'icon': 'assets/images/iconlevelb.png',
-        'color': const Color(0xFF4ECDC4),
-        'isLocked': false, // Will be checked dynamically
-      },
-      {
-        'level': 'C',
-        'title': 'Level C',
-        'icon': 'assets/images/iconlevelc.png',
-        'color': const Color(0xFF95E1D3),
-        'isLocked': false, // Will be checked dynamically
-      },
-      {
-        'level': 'D',
-        'title': 'Level D',
-        'icon': 'assets/images/iconleveld.png',
-        'color': const Color(0xFFFECA57),
-        'isLocked': false, // Will be checked dynamically
-      },
-      {
-        'level': 'E',
-        'title': 'Level E',
-        'icon': 'assets/images/iconlevele.png',
-        'color': const Color(0xFFEE5A6F),
-        'isLocked': false, // Will be checked dynamically
-      },
-    ];
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pilih Level Alfabet'),
-        centerTitle: true,
+      appBar: AppBarCustom(
+        title: 'Pilih Level Alfabet',
+        showBackButton: true,
+        height: 70,
       ),
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primary.withOpacity(0.1),
-              AppColors.white,
-            ],
-          ),
-        ),
-        child: GridView.builder(
-          padding: AppSizes.paddingAllLg,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: alfabetLevels.length,
-          itemBuilder: (context, index) {
-            final level = alfabetLevels[index];
-            final levelName = level['level'] as String;
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        color: AppColors.primary,
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            return Obx(() {
-              // Rebuild when completedLevels changes
-              controller.completedLevels.length;
+          if (controller.levels.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.inbox, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada level alfabet',
+                    style: AppTextStyles.textTheme.titleMedium,
+                  ),
+                ],
+              ),
+            );
+          }
 
-              return _AlfabetLevelCard(
-                level: levelName,
-                title: level['title'] as String,
-                iconPath: level['icon'] as String,
-                backgroundColor: level['color'] as Color,
-                isLocked: controller.isLevelLocked(levelName),
-                onTap: controller.isLevelLocked(levelName)
-                    ? () {
-                        Get.snackbar(
-                          'Terkunci 🔒',
-                          'Selesaikan level sebelumnya terlebih dahulu',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.orange,
-                          colorText: Colors.white,
-                        );
-                      }
-                    : () {
-                        // Navigate to specific alfabet level
-                        Get.toNamed(
-                          AppConstants.alfabethLevelRoute,
-                          arguments: levelName,
-                        );
-                      },
-              );
-            });
-          },
-        ),
+          return Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primary.withOpacity(0.1),
+                  AppColors.white,
+                ],
+              ),
+            ),
+            child: GridView.builder(
+              padding: AppSizes.paddingAllLg,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: controller.levels.length,
+              itemBuilder: (context, index) {
+                final level = controller.levels[index];
+                final levelName = level['word'] as String;
+                final levelNumber = level['level_number'] as int;
+                final isUnlocked = level['is_unlocked'] == 1;
+                final isCompleted = level['is_completed'] == 1;
+
+                // Define colors for each level
+                final colors = [
+                  const Color(0xFFFF6B6B), // A - Red
+                  const Color(0xFF4ECDC4), // B - Teal
+                  const Color(0xFF95E1D3), // C - Mint
+                  const Color(0xFFFECA57), // D - Yellow
+                  const Color(0xFFEE5A6F), // E - Pink
+                ];
+
+                // Define icon paths
+                final iconPaths = [
+                  'assets/images/iconlevela.png',
+                  'assets/images/iconlevelb.png',
+                  'assets/images/iconlevelc.png',
+                  'assets/images/iconleveld.png',
+                  'assets/images/iconlevele.png',
+                ];
+
+                final backgroundColor =
+                    colors[(levelNumber - 1) % colors.length];
+                final iconPath =
+                    iconPaths[(levelNumber - 1) % iconPaths.length];
+
+                return _AlfabetLevelCard(
+                  level: levelName,
+                  title: 'Level $levelName',
+                  iconPath: iconPath,
+                  backgroundColor: backgroundColor,
+                  isLocked: !isUnlocked,
+                  isCompleted: isCompleted,
+                  onTap: !isUnlocked
+                      ? () {
+                          Get.snackbar(
+                            'Terkunci 🔒',
+                            'Selesaikan level sebelumnya terlebih dahulu',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.orange,
+                            colorText: Colors.white,
+                          );
+                        }
+                      : () {
+                          // Navigate biasa tanpa callback
+                          Get.toNamed(
+                            AppConstants.alfabethLevelRoute,
+                            arguments: levelName,
+                          );
+                        },
+                );
+              },
+            ),
+          );
+        }),
       ),
     );
   }
@@ -123,6 +172,7 @@ class _AlfabetLevelCard extends StatelessWidget {
   final String iconPath;
   final Color backgroundColor;
   final bool isLocked;
+  final bool isCompleted;
   final VoidCallback onTap;
 
   const _AlfabetLevelCard({
@@ -131,6 +181,7 @@ class _AlfabetLevelCard extends StatelessWidget {
     required this.iconPath,
     required this.backgroundColor,
     required this.isLocked,
+    required this.isCompleted,
     required this.onTap,
   });
 
@@ -224,6 +275,31 @@ class _AlfabetLevelCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // Check icon overlay untuk completed
+              if (isCompleted && !isLocked)
+                Positioned(
+                  right: 12,
+                  top: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: Colors.green.shade700,
+                      size: 20,
+                    ),
+                  ),
+                ),
               // Lock icon overlay
               if (isLocked)
                 Positioned(

@@ -95,6 +95,9 @@ class AppConstants {
   static const String alfabethLevelRoute = '/alfabeth_level';
   static const String alfabethRoute = '/alfabeth';
 
+  // Development Routes (hapus sebelum production)
+  static const String databaseDebugRoute = '/database-debug';
+
   // // Default Values
   // static const String defaultLanguage = 'en';
   // static const String defaultCountry = 'US';

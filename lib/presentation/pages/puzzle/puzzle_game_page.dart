@@ -12,7 +12,11 @@ class PuzzleGamePage extends StatelessWidget {
     final controller = Get.find<PuzzleController>();
 
     return Scaffold(
-      appBar: AppBarCustom(),
+      appBar: AppBarCustom(
+        title: 'Tebak Huruf',
+        showBackButton: true,
+        height: 70,
+      ),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(
@@ -23,62 +27,60 @@ class PuzzleGamePage extends StatelessWidget {
         return Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary.withOpacity(0.1),
-                AppColors.white,
-              ],
-            ),
-          ),
+          color: Colors.white, // Background putih
           child: SafeArea(
-            child: Column(
-              children: [
-                // Progress indicator
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0), // Dikurangi dari 20 ke 16
+                child: Column(
+                  children: [
+                    // Progress indicator
+                    _buildProgressIndicator(controller),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32.0),
-                  child: Text(
-                    'Pilih Huruf Yang Benar!',
-                    style: AppTextStyles.textTheme.displayLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.black,
+                    const SizedBox(height: 16), // Dikurangi dari 20 ke 16
+
+                    // Instruksi - tebal hitam seperti alfabet
+                    Text(
+                      'Tebak Huruf Yang Hilang!',
+                      style: AppTextStyles.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        fontFamily: 'Fredoka',
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+
+                    const SizedBox(height: 20), // Dikurangi dari 24 ke 20
+
+                    // Gambar besar di tengah - tanpa background
+                    Image.asset(
+                      controller.currentImage.value,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.image_not_supported,
+                          size: 120,
+                          color: Colors.grey.shade400,
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 24), // Dikurangi dari 32 ke 24
+
+                    // Grid jawaban (kata dengan huruf tersembunyi)
+                    _buildWordDisplay(controller),
+
+                    const SizedBox(height: 24), // Dikurangi dari 32 ke 24
+
+                    // Grid pilihan huruf
+                    _buildAnswerOptions(controller),
+
+                    const SizedBox(height: 16), // Dikurangi dari 20 ke 16
+                  ],
                 ),
-                Image.asset(
-                  controller.currentImage.value,
-                  width: 200,
-                  height: 200,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.image_not_supported,
-                      size: 100,
-                      color: Colors.grey.shade400,
-                    );
-                  },
-                ),
-
-                // Instruction
-
-                const SizedBox(height: 32),
-
-                // Word display with hidden letter
-                Expanded(
-                  child: Center(
-                    child: _buildWordDisplay(controller),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                _buildAnswerOptions(controller),
-
-                const SizedBox(height: 32),
-              ],
+              ),
             ),
           ),
         );
@@ -86,142 +88,75 @@ class PuzzleGamePage extends StatelessWidget {
     );
   }
 
-  // Progress bar
-
-  // Word display with one hidden letter
-  Widget _buildWordDisplay(PuzzleController controller) {
-    final word = controller.correctAnswer.value;
-    final hiddenIndex = controller.hiddenLetterIndex.value;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            word.length,
-            (index) {
-              final isHidden = index == hiddenIndex;
-              final letter = word[index];
-
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 70,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: isHidden
-                      ? AppColors.primary.withOpacity(0.1)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isHidden ? AppColors.primary : Colors.grey.shade300,
-                    width: 3,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    isHidden ? '_' : letter,
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      fontFamily: 'Fredoka',
-                    ),
-                  ),
-                ),
-              );
-            },
+  // Progress indicator - hanya teks
+  Widget _buildProgressIndicator(PuzzleController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.stars, color: AppColors.warning, size: 24),
+        const SizedBox(width: 8),
+        Text(
+          'Progress: ${controller.score.value}/${controller.totalQuestions.value}',
+          style: AppTextStyles.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+            fontFamily: 'Fredoka',
           ),
         ),
-      ),
+      ],
     );
   }
 
-  // Answer options grid
-  Widget _buildAnswerOptions(PuzzleController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1.5,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: controller.answerOptions.length,
-        itemBuilder: (context, index) {
-          final option = controller.answerOptions[index];
-          final isSelected = controller.selectedAnswer.value == option;
-          final correctLetter = controller
-              .correctAnswer.value[controller.hiddenLetterIndex.value];
-          final isCorrect = option == correctLetter;
+  // Word display with one hidden letter - Grid soal (persegi, ukuran dikecilkan)
+  Widget _buildWordDisplay(PuzzleController controller) {
+    final word = controller.correctAnswer.value;
+    final hiddenIndex = controller.hiddenLetterIndex.value;
+    final completedIndexes = controller.completedLetterIndexes;
 
-          Color backgroundColor = Colors.white;
-          Color borderColor = AppColors.primary;
-          Color textColor = AppColors.primary;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(
+        word.length,
+        (index) {
+          final isHidden =
+              index == hiddenIndex && !completedIndexes.contains(index);
+          final isCompleted = completedIndexes.contains(index);
+          final letter = word[index];
 
-          if (controller.isAnswered.value && isSelected) {
-            if (isCorrect) {
-              backgroundColor = Colors.green.shade50;
-              borderColor = Colors.green;
-              textColor = Colors.green.shade700;
-            } else {
-              backgroundColor = Colors.red.shade50;
-              borderColor = Colors.red;
-              textColor = Colors.red.shade700;
-            }
-          }
-
-          return Material(
-            elevation: isSelected ? 8 : 2,
-            borderRadius: BorderRadius.circular(20),
-            color: backgroundColor,
-            child: InkWell(
-              onTap: controller.isAnswered.value
-                  ? null
-                  : () => controller.checkAnswer(option),
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: borderColor,
-                    width: isSelected ? 4 : 2,
-                  ),
+          return Container(
+            width: 50, // Dikecilkan dan dibuat persegi
+            height: 50, // Sama dengan width (persegi)
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A5731), // Hijau tua untuk semua grid soal
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isCompleted
+                    ? AppColors.success
+                    : isHidden
+                        ? const Color(0xFF2A5731)
+                        : const Color(0xFF2A5731),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        option,
-                        style: TextStyle(
-                          fontSize: 56,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                          fontFamily: 'Fredoka',
-                        ),
-                      ),
-                      if (controller.isAnswered.value && isSelected) ...[
-                        const SizedBox(height: 4),
-                        Icon(
-                          isCorrect ? Icons.check_circle : Icons.cancel,
-                          color: isCorrect ? Colors.green : Colors.red,
-                          size: 32,
-                        ),
-                      ],
-                    ],
-                  ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                isHidden && !isCompleted
+                    ? '_'
+                    : letter, // Gunakan "_" bukan "?"
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Teks putih untuk semua
+                  fontFamily: 'Fredoka',
                 ),
               ),
             ),
@@ -231,37 +166,72 @@ class PuzzleGamePage extends StatelessWidget {
     );
   }
 
-  // Exit confirmation dialog
-  void _showExitDialog(BuildContext context, PuzzleController controller) {
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          'Keluar dari Game?',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: const Text(
-          'Progress kamu tidak akan disimpan jika keluar sekarang.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Get.back(); // Close dialog
-              Get.back(); // Back to level page
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+  // Answer options grid - Grid jawaban (warna hijau, ukuran sama dengan grid soal: 50x50)
+  Widget _buildAnswerOptions(PuzzleController controller) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(
+        controller.answerOptions.length,
+        (index) {
+          final option = controller.answerOptions[index];
+          final isSelected = controller.selectedAnswer.value == option;
+          final correctLetter = controller
+              .correctAnswer.value[controller.hiddenLetterIndex.value];
+          final isCorrect = option == correctLetter;
+
+          Color backgroundColor =
+              const Color(0xFF2A5731); // Hijau sama dengan grid soal
+          Color borderColor = const Color(0xFF2A5731);
+          Color textColor = Colors.white;
+
+          if (controller.isAnswered.value && isSelected) {
+            if (isCorrect) {
+              backgroundColor = AppColors.success;
+              borderColor = AppColors.success;
+              textColor = Colors.white;
+            } else {
+              backgroundColor = AppColors.error;
+              borderColor = AppColors.error;
+              textColor = Colors.white;
+            }
+          }
+
+          return Material(
+            elevation: isSelected ? 4 : 1,
+            borderRadius: BorderRadius.circular(12),
+            color: backgroundColor,
+            child: InkWell(
+              onTap: controller.isAnswered.value
+                  ? null
+                  : () => controller.checkAnswer(option),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 50, // Sama dengan grid soal
+                height: 50, // Sama dengan grid soal (persegi)
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: borderColor,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    option,
+                    style: TextStyle(
+                      fontSize: 28, // Sama dengan grid soal
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      fontFamily: 'Fredoka',
+                    ),
+                  ),
+                ),
+              ),
             ),
-            child: const Text('Keluar'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
