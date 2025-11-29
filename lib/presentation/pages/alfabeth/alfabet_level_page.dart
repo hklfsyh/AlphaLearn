@@ -19,6 +19,7 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
   bool leftFilled = false;
   bool rightFilled = false;
   bool isCompleted = false;
+  bool hasStartedDragging = false; // Track apakah user sudah mulai drag
 
   // State untuk tracking posisi drag
   Offset? leftAnswerPosition;
@@ -44,6 +45,7 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
   // Fungsi ketika drag selesai
   void _onLeftDropped() {
     setState(() {
+      hasStartedDragging = true; // User sudah mulai drag
       leftFilled = true;
       _checkCompletion();
     });
@@ -51,6 +53,7 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
 
   void _onRightDropped() {
     setState(() {
+      hasStartedDragging = true; // User sudah mulai drag
       rightFilled = true;
       _checkCompletion();
     });
@@ -63,9 +66,16 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
         isCompleted = true;
       });
 
-      // Tampilkan dialog selesai
-      Future.delayed(const Duration(milliseconds: 500), () {
+      // Tampilkan notifikasi setelah gambar berganti (0.8 detik)
+      Future.delayed(const Duration(milliseconds: 800), () {
         _showCompletionDialog();
+      });
+
+      // Auto redirect setelah notifikasi selesai (0.8s + 3s = 3.8s total)
+      Future.delayed(const Duration(milliseconds: 3800), () {
+        if (mounted) {
+          Get.back(); // Kembali ke halaman pemilihan level
+        }
       });
     }
   }
@@ -75,57 +85,94 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
     // Save progress
     controller.completeLevel(currentLevel);
 
+    // Tampilkan dialog biasa tanpa animasi
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Column(
-          children: [
-            Icon(Icons.celebration, size: 64, color: Colors.amber),
-            SizedBox(height: 16),
-            Text(
-              'Level Selesai! 🎉',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
+      barrierDismissible: false, // Tidak bisa dismiss dengan tap di luar
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFFFC107),
+                  Color(0xFFFFD54F),
+                ],
               ),
-              textAlign: TextAlign.center,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
             ),
-          ],
-        ),
-        content: Text(
-          'Selamat! Kamu telah menyelesaikan Level $currentLevel',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 16),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Get.back(); // Kembali ke menu level
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              minimumSize: const Size(double.infinity, 48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Kembali ke Menu',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Selamat',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.3),
+                              offset: Offset(2, 2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Kamu berhasil bentuk huruf \'$currentLevel\'',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Mari lanjut ke huruf selanjutnya!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16),
+                Image.asset(
+                  'assets/images/bintangsukses.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
+
+    // Tutup dialog setelah 3 detik
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.of(context).pop(); // Tutup dialog
+      }
+    });
   }
 
   @override
@@ -188,81 +235,135 @@ class _AlfabetLevelPageState extends State<AlfabetLevelPage> {
             const SizedBox(height: 40), // Area Soal (Drop Target)
             Expanded(
               child: Center(
-                child: Container(
+                child: SizedBox(
                   width: questionSize,
                   height: questionSize,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Drop target kiri
-                      DragTarget<String>(
-                        onAcceptWithDetails: (details) {
-                          if (details.data == 'left' && !leftFilled) {
-                            _onLeftDropped();
-                          }
-                        },
-                        builder: (context, candidateData, rejectedData) {
-                          return Container(
-                            width: questionSize / 2,
-                            height: questionSize,
-                            child: ClipRect(
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                widthFactor: 1.0,
-                                child: leftFilled
-                                    ? Image.asset(
-                                        _getLeftAnswerImage(),
-                                        width: questionSize,
-                                        height: questionSize,
-                                        fit: BoxFit.contain,
-                                      )
-                                    : Image.asset(
-                                        'assets/images/${currentLevel.toLowerCase()}rangka1.png',
-                                        width: questionSize,
-                                        height: questionSize,
-                                        fit: BoxFit.contain,
-                                      ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                  child: isCompleted
+                      ? // Tampilkan gambar lengkap saat selesai - TETAP DI TENGAH
+                      Image.asset(
+                          'assets/images/${currentLevel.toLowerCase()}lengkap.png',
+                          fit: BoxFit.contain,
+                        )
+                      : !hasStartedDragging
+                          ? // Tampilkan rangka lengkap sebelum drag - TETAP DI TENGAH
+                          Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Gambar rangka lengkap - PERBESAR UKURAN & POSISI TENGAH
+                                SizedBox(
+                                  width: questionSize,
+                                  height: questionSize,
+                                  child: Image.asset(
+                                    'assets/images/rangkalengkap${currentLevel.toLowerCase()}.png',
+                                    width: questionSize,
+                                    height: questionSize,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
 
-                      // Drop target kanan (tanpa space/gap)
-                      DragTarget<String>(
-                        onAcceptWithDetails: (details) {
-                          if (details.data == 'right' && !rightFilled) {
-                            _onRightDropped();
-                          }
-                        },
-                        builder: (context, candidateData, rejectedData) {
-                          return Container(
-                            width: questionSize / 2,
-                            height: questionSize,
-                            child: ClipRect(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                widthFactor: 1.0,
-                                child: rightFilled
-                                    ? Image.asset(
-                                        _getRightAnswerImage(),
-                                        width: questionSize,
-                                        height: questionSize,
-                                        fit: BoxFit.contain,
-                                      )
-                                    : Image.asset(
-                                        'assets/images/${currentLevel.toLowerCase()}rangka2.png',
-                                        width: questionSize,
-                                        height: questionSize,
-                                        fit: BoxFit.contain,
-                                      ),
+                                // Invisible drag target kiri
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: questionSize / 2,
+                                  child: DragTarget<String>(
+                                    onAcceptWithDetails: (details) {
+                                      if (details.data == 'left' &&
+                                          !leftFilled) {
+                                        _onLeftDropped();
+                                      }
+                                    },
+                                    builder:
+                                        (context, candidateData, rejectedData) {
+                                      return Container(
+                                        color: Colors.transparent,
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                                // Invisible drag target kanan
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: questionSize / 2,
+                                  child: DragTarget<String>(
+                                    onAcceptWithDetails: (details) {
+                                      if (details.data == 'right' &&
+                                          !rightFilled) {
+                                        _onRightDropped();
+                                      }
+                                    },
+                                    builder:
+                                        (context, candidateData, rejectedData) {
+                                      return Container(
+                                        color: Colors.transparent,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
+                          : // Tampilkan rangka terpisah setelah drag - GESER KE KANAN
+                          Transform.translate(
+                              offset: Offset(20, 0),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Sisi Kiri - DragTarget (posisi di kiri)
+                                  Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: questionSize / 2 + 10,
+                                    child: DragTarget<String>(
+                                      onAcceptWithDetails: (details) {
+                                        if (details.data == 'left' &&
+                                            !leftFilled) {
+                                          _onLeftDropped();
+                                        }
+                                      },
+                                      builder: (context, candidateData,
+                                          rejectedData) {
+                                        return Image.asset(
+                                          leftFilled
+                                              ? _getLeftAnswerImage()
+                                              : 'assets/images/${currentLevel.toLowerCase()}rangka1.png',
+                                          fit: BoxFit.contain,
+                                        );
+                                      },
+                                    ),
+                                  ),
+
+                                  // Sisi Kanan - DragTarget (posisi di kanan)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: questionSize / 2 + 10,
+                                    child: DragTarget<String>(
+                                      onAcceptWithDetails: (details) {
+                                        if (details.data == 'right' &&
+                                            !rightFilled) {
+                                          _onRightDropped();
+                                        }
+                                      },
+                                      builder: (context, candidateData,
+                                          rejectedData) {
+                                        return Image.asset(
+                                          rightFilled
+                                              ? _getRightAnswerImage()
+                                              : 'assets/images/${currentLevel.toLowerCase()}rangka2.png',
+                                          fit: BoxFit.contain,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
