@@ -1,3 +1,4 @@
+import 'package:alphalearn/presentation/widget/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/core.dart';
@@ -11,45 +12,7 @@ class PuzzleGamePage extends StatelessWidget {
     final controller = Get.find<PuzzleController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tebak Huruf'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () {
-            _showExitDialog(context, controller);
-          },
-        ),
-        actions: [
-          Obx(() => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Center(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.yellow, size: 20),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${controller.score.value}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )),
-        ],
-      ),
+      appBar: AppBarCustom(),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(
@@ -74,18 +37,32 @@ class PuzzleGamePage extends StatelessWidget {
             child: Column(
               children: [
                 // Progress indicator
-                _buildProgressBar(controller),
 
-                const SizedBox(height: 24),
-
-                // Instruction
-                Text(
-                  'Huruf apa yang hilang?',
-                  style: AppTextStyles.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32.0),
+                  child: Text(
+                    'Pilih Huruf Yang Benar!',
+                    style: AppTextStyles.textTheme.displayLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.black,
+                    ),
                   ),
                 ),
+                Image.asset(
+                  controller.currentImage.value,
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.image_not_supported,
+                      size: 100,
+                      color: Colors.grey.shade400,
+                    );
+                  },
+                ),
+
+                // Instruction
 
                 const SizedBox(height: 32),
 
@@ -110,59 +87,6 @@ class PuzzleGamePage extends StatelessWidget {
   }
 
   // Progress bar
-  Widget _buildProgressBar(PuzzleController controller) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Level Progress',
-                style: AppTextStyles.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                controller.correctAnswer.value,
-                style: AppTextStyles.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: controller.isAnswered.value ? 1.0 : 0.0,
-              minHeight: 8,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                controller.isAnswered.value && controller.score.value > 0
-                    ? Colors.green
-                    : AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // Word display with one hidden letter
   Widget _buildWordDisplay(PuzzleController controller) {
@@ -204,11 +128,11 @@ class PuzzleGamePage extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    isHidden ? '?' : letter,
+                    isHidden ? '_' : letter,
                     style: TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
-                      color: isHidden ? AppColors.primary : Colors.black87,
+                      color: Colors.black87,
                       fontFamily: 'Fredoka',
                     ),
                   ),
