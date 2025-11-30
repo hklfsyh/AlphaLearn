@@ -5,53 +5,147 @@ import 'package:get/get.dart';
 
 import '../../widget/app_bar_custom.dart';
 
-class PuzzleMenuPage extends StatelessWidget {
+class PuzzleMenuPage extends StatefulWidget {
   const PuzzleMenuPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<PuzzleController>();
+  State<PuzzleMenuPage> createState() => _PuzzleMenuPageState();
+}
 
+class _PuzzleMenuPageState extends State<PuzzleMenuPage> {
+  late final PuzzleController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Get.isRegistered<PuzzleController>()) {
+      controller = Get.find<PuzzleController>();
+      controller.loadCategories();
+    } else {
+      controller = Get.put(PuzzleController());
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await controller.loadCategories();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarCustom(
         title: 'Pilih Kategori',
         showBackButton: true,
         height: 70,
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        color: AppColors.primary,
+        child: Obx(() {
+          // Loading state
+          if (controller.isLoading.value) {
+            return _buildLoadingState();
+          }
 
-        if (controller.categories.isEmpty) {
-          return const Center(
-            child: Text('Tidak ada kategori tersedia'),
-          );
-        }
+          // Empty state
+          if (controller.categories.isEmpty) {
+            return _buildEmptyState(context);
+          }
 
-        return Container(
-          height: double.infinity,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary.withOpacity(0.1),
-                AppColors.white,
+          // Success state
+          return _buildSuccessState();
+        }),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.white,
+          ],
+        ),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Memuat kategori...'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.white,
+          ],
+        ),
+      ),
+      child: ListView(
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+          const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Tidak ada kategori tersedia',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Tarik ke bawah untuk refresh',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ),
-          child: GridView.builder(
-            padding: AppSizes.paddingAllLg,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.85,
-            ),
-            itemCount: controller.categories.length,
-            itemBuilder: (context, index) {
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessState() {
+    return Container(
+      height: double.infinity,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.white,
+          ],
+        ),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 20,
+            runSpacing: 20,
+            children: List.generate(controller.categories.length, (index) {
               final category = controller.categories[index];
               final categoryId = category['category_id'] as int;
               final categoryName = category['name'] as String;
@@ -85,10 +179,10 @@ class PuzzleMenuPage extends StatelessWidget {
                   );
                 },
               );
-            },
+            }),
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }
@@ -108,102 +202,153 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: isLocked ? 2 : 6,
-      borderRadius: AppSizes.borderRadiusMd,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppSizes.borderRadiusMd,
-        child: Container(
-          decoration: BoxDecoration(
-            color: isLocked
-                ? Colors.grey.shade400
-                : _getCategoryColor(categoryId).withOpacity(0.1),
-            borderRadius: AppSizes.borderRadiusMd,
-            border: Border.all(
+    final backgroundColor = _getCategoryColor(categoryId);
+
+    return SizedBox(
+      width: 160,
+      height: 200,
+      child: Material(
+        elevation: isLocked ? 2 : 6,
+        borderRadius: BorderRadius.circular(20),
+        shadowColor: isLocked
+            ? Colors.grey.withOpacity(0.3)
+            : backgroundColor.withOpacity(0.4),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            decoration: BoxDecoration(
               color: isLocked
-                  ? Colors.grey.shade600
-                  : _getCategoryColor(categoryId),
-              width: 2,
+                  ? Colors.grey.shade400
+                  : backgroundColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isLocked ? Colors.grey.shade600 : backgroundColor,
+                width: 2.5,
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Icon
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isLocked
-                              ? Colors.grey.shade300
-                              : _getCategoryColor(categoryId).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Center(
-                          child: ColorFiltered(
-                            colorFilter: isLocked
-                                ? const ColorFilter.mode(
-                                    Colors.grey,
-                                    BlendMode.saturation,
-                                  )
-                                : const ColorFilter.mode(
-                                    Colors.transparent,
-                                    BlendMode.multiply,
-                                  ),
-                            child: Image.asset(
-                              _getCategoryImage(categoryId),
-                              fit: BoxFit.contain,
-                            ),
+            child: Stack(
+              children: [
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Icon container
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: isLocked
+                                ? Colors.grey.shade300
+                                : backgroundColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
+                            child: _buildIcon(backgroundColor),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Title
-                    Text(
-                      categoryName,
-                      style: AppTextStyles.textTheme.titleMedium?.copyWith(
-                        color: isLocked
-                            ? Colors.grey.shade700
-                            : _getCategoryColor(categoryId),
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      // Title
+                      Text(
+                        categoryName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isLocked ? Colors.grey.shade700 : backgroundColor,
+                          fontFamily: 'Fredoka',
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              // Lock icon overlay
-              if (isLocked)
-                Positioned(
-                  right: 12,
-                  top: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lock,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    ],
                   ),
                 ),
-            ],
+                // Status overlay (locked)
+                _buildStatusOverlay(),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildIcon(Color backgroundColor) {
+    if (isLocked) {
+      // Tampilkan tanda tanya untuk category terkunci
+      return Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade500,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Text(
+            '?',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Fredoka',
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Tampilkan gambar untuk category unlocked
+    return Image.asset(
+      _getCategoryImage(categoryId),
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: backgroundColor.withOpacity(0.3),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              _getCategoryIcon(categoryId),
+              size: 32,
+              color: backgroundColor,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusOverlay() {
+    // Locked overlay
+    if (isLocked) {
+      return Positioned(
+        right: 12,
+        top: 12,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.6),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.lock,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   String _getCategoryImage(int categoryId) {
@@ -220,6 +365,23 @@ class _CategoryCard extends StatelessWidget {
         return 'assets/images/keluarga.png';
       default:
         return 'assets/images/doodle_animal.png';
+    }
+  }
+
+  IconData _getCategoryIcon(int categoryId) {
+    switch (categoryId) {
+      case 1:
+        return Icons.apple;
+      case 2:
+        return Icons.pets;
+      case 3:
+        return Icons.accessibility_new;
+      case 4:
+        return Icons.chair;
+      case 5:
+        return Icons.family_restroom;
+      default:
+        return Icons.category;
     }
   }
 
