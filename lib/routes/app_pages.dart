@@ -11,7 +11,6 @@ import '../presentation/pages/alfabeth/alfabet_page.dart';
 import '../presentation/pages/alfabeth/alfabet_menu_page.dart';
 import '../presentation/pages/alfabeth/alfabet_level_page.dart';
 import '../presentation/pages/alfabeth/alfabet_binding.dart';
-import '../presentation/pages/dev/database_debug_page.dart'; // Development only
 import 'package:get/get.dart';
 
 final appPages = [
@@ -57,8 +56,8 @@ final appPages = [
     page: () => const AlphabetGamePage(),
   ),
   // Development only - hapus sebelum production
-  GetPage(
-    name: AppConstants.databaseDebugRoute,
-    page: () => const DatabaseDebugPage(),
-  ),
+  // GetPage(
+  //   name: AppConstants.databaseDebugRoute,
+  //   page: () => const DatabaseDebugPage(),
+  // ),
 ];
