@@ -1,3 +1,6 @@
+import 'package:alphalearn/core/utils/audio_service.dart';
+import 'package:get/get.dart';
+
 import '../../core/core.dart';
 import 'package:alphalearn/routes/app_pages.dart';
 import 'package:alphalearn/database/database_helper.dart';
@@ -7,7 +10,12 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 void main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize audio service
+  final audioService = AudioService();
+  await audioService.init();
 
+  // Register as GetX singleton
+  Get.put(audioService, permanent: true);
   // Initialize database - akan terbentuk sekali saat pertama kali install
   await DatabaseHelper.initialize();
 
