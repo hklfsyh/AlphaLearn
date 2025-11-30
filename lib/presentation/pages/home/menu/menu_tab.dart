@@ -48,19 +48,6 @@ class MenuTab extends StatelessWidget {
             ],
           ),
         ),
-        // Development only - floating button untuk database debug
-        // HAPUS sebelum production!
-        Positioned(
-          right: 16,
-          bottom: AppSizes.bottomNavHeight + 16,
-          child: FloatingActionButton(
-            mini: true,
-            backgroundColor: Colors.orange,
-            onPressed: () => Get.toNamed(AppConstants.databaseDebugRoute),
-            tooltip: 'Database Debug',
-            child: const Icon(Icons.bug_report, size: 20),
-          ),
-        ),
       ],
     );
   }
